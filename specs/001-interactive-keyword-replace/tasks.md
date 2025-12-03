@@ -24,11 +24,11 @@
 
 **Purpose**: Project initialization, dependencies, and basic structure
 
-- [ ] T001 Install required NuGet packages (CsvHelper, Markdig) via `dotnet add package`
-- [ ] T001a [P] Configure auto port selection and browser launch in `CovenantPromptKey/Properties/launchSettings.json` (FR-030, FR-031)
-- [ ] T002 [P] Create constants file in `CovenantPromptKey/Constants/AppConstants.cs`
-- [ ] T003 [P] Create reserved keywords file in `CovenantPromptKey/Constants/ReservedKeywords.cs`
-- [ ] T004 Create test project `CovenantPromptKey.Tests/CovenantPromptKey.Tests.csproj` with xUnit
+- [X] T001 Install required NuGet packages (CsvHelper, Markdig) via `dotnet add package`
+- [X] T001a [P] Configure auto port selection and browser launch in `CovenantPromptKey/Properties/launchSettings.json` (FR-030, FR-031)
+- [X] T002 [P] Create constants file in `CovenantPromptKey/Constants/AppConstants.cs`
+- [X] T003 [P] Create reserved keywords file in `CovenantPromptKey/Constants/ReservedKeywords.cs`
+- [X] T004 Create test project `CovenantPromptKey.Tests/CovenantPromptKey.Tests.csproj` with xUnit
 
 ---
 
@@ -40,37 +40,37 @@
 
 ### Models (Core Entities)
 
-- [ ] T005 [P] Create `KeywordMapping` model in `CovenantPromptKey/Models/KeywordMapping.cs`
-- [ ] T006 [P] Create `DetectedKeyword` and `KeywordOccurrence` models in `CovenantPromptKey/Models/DetectedKeyword.cs`
-- [ ] T007 [P] Create `WorkSession` and `WorkMode` enum in `CovenantPromptKey/Models/WorkSession.cs`
-- [ ] T008 [P] Create `LogEntry` and `LogLevel` enum in `CovenantPromptKey/Models/LogEntry.cs`
-- [ ] T009 [P] Create `MaskResult`, `RestoreResult`, `ReplacementDetail` in `CovenantPromptKey/Models/Results/MaskResult.cs`
-- [ ] T010 [P] Create `CsvImportResult` in `CovenantPromptKey/Models/Results/CsvImportResult.cs`
-- [ ] T011 [P] Create `ValidationResult<T>`, `CsvValidationResult`, `CsvError` in `CovenantPromptKey/Models/Results/ValidationResult.cs`
-- [ ] T012 [P] Create `MarkdownStructure` and `TextRange` in `CovenantPromptKey/Models/MarkdownStructure.cs`
+- [X] T005 [P] Create `KeywordMapping` model in `CovenantPromptKey/Models/KeywordMapping.cs`
+- [X] T006 [P] Create `DetectedKeyword` and `KeywordOccurrence` models in `CovenantPromptKey/Models/DetectedKeyword.cs`
+- [X] T007 [P] Create `WorkSession` and `WorkMode` enum in `CovenantPromptKey/Models/WorkSession.cs`
+- [X] T008 [P] Create `LogEntry` and `LogLevel` enum in `CovenantPromptKey/Models/LogEntry.cs`
+- [X] T009 [P] Create `MaskResult`, `RestoreResult`, `ReplacementDetail` in `CovenantPromptKey/Models/Results/MaskResult.cs`
+- [X] T010 [P] Create `CsvImportResult` in `CovenantPromptKey/Models/Results/CsvImportResult.cs`
+- [X] T011 [P] Create `ValidationResult<T>`, `CsvValidationResult`, `CsvError` in `CovenantPromptKey/Models/Results/ValidationResult.cs`
+- [X] T012 [P] Create `MarkdownStructure` and `TextRange` in `CovenantPromptKey/Models/MarkdownStructure.cs`
 
 ### Service Interfaces
 
-- [ ] T013 [P] Create `IKeywordService` interface in `CovenantPromptKey/Services/Interfaces/IKeywordService.cs`
-- [ ] T014 [P] Create `IDictionaryService` interface in `CovenantPromptKey/Services/Interfaces/IDictionaryService.cs`
-- [ ] T015 [P] Create `ICsvService` interface in `CovenantPromptKey/Services/Interfaces/ICsvService.cs`
-- [ ] T016 [P] Create `ISessionStorageService` interface in `CovenantPromptKey/Services/Interfaces/ISessionStorageService.cs`
-- [ ] T017 [P] Create `IWorkSessionService` interface in `CovenantPromptKey/Services/Interfaces/IWorkSessionService.cs`
-- [ ] T018 [P] Create `IDebugLogService` interface in `CovenantPromptKey/Services/Interfaces/IDebugLogService.cs`
-- [ ] T019 [P] Create `IMarkdownService` interface in `CovenantPromptKey/Services/Interfaces/IMarkdownService.cs`
-- [ ] T020 [P] Create `IKeywordValidationService` interface in `CovenantPromptKey/Services/Interfaces/IKeywordValidationService.cs`
+- [X] T013 [P] Create `IKeywordService` interface in `CovenantPromptKey/Services/Interfaces/IKeywordService.cs`
+- [X] T014 [P] Create `IDictionaryService` interface in `CovenantPromptKey/Services/Interfaces/IDictionaryService.cs`
+- [X] T015 [P] Create `ICsvService` interface in `CovenantPromptKey/Services/Interfaces/ICsvService.cs`
+- [X] T016 [P] Create `ISessionStorageService` interface in `CovenantPromptKey/Services/Interfaces/ISessionStorageService.cs`
+- [X] T017 [P] Create `IWorkSessionService` interface in `CovenantPromptKey/Services/Interfaces/IWorkSessionService.cs`
+- [X] T018 [P] Create `IDebugLogService` interface in `CovenantPromptKey/Services/Interfaces/IDebugLogService.cs`
+- [X] T019 [P] Create `IMarkdownService` interface in `CovenantPromptKey/Services/Interfaces/IMarkdownService.cs`
+- [X] T020 [P] Create `IKeywordValidationService` interface in `CovenantPromptKey/Services/Interfaces/IKeywordValidationService.cs`
 
 ### Core Infrastructure Services
 
-- [ ] T021 Unit tests for `DebugLogService` in `CovenantPromptKey.Tests/Services/DebugLogServiceTests.cs`
-- [ ] T022 Implement `DebugLogService` in `CovenantPromptKey/Services/Implementations/DebugLogService.cs`
-- [ ] T023 Unit tests for `SessionStorageService` in `CovenantPromptKey.Tests/Services/SessionStorageServiceTests.cs`
-- [ ] T024 Implement `SessionStorageService` in `CovenantPromptKey/Services/Implementations/SessionStorageService.cs`
-- [ ] T025 Create JS interop file for clipboard/scroll in `CovenantPromptKey/wwwroot/js/interop.js`
+- [X] T021 Unit tests for `DebugLogService` in `CovenantPromptKey.Tests/Services/DebugLogServiceTests.cs`
+- [X] T022 Implement `DebugLogService` in `CovenantPromptKey/Services/Implementations/DebugLogService.cs`
+- [X] T023 Unit tests for `SessionStorageService` in `CovenantPromptKey.Tests/Services/SessionStorageServiceTests.cs`
+- [X] T024 Implement `SessionStorageService` in `CovenantPromptKey/Services/Implementations/SessionStorageService.cs`
+- [X] T025 Create JS interop file for clipboard/scroll in `CovenantPromptKey/wwwroot/js/interop.js`
 
 ### Dependency Injection Registration
 
-- [ ] T026 Update `CovenantPromptKey/Program.cs` to register all services with appropriate lifetimes
+- [X] T026 Update `CovenantPromptKey/Program.cs` to register all services with appropriate lifetimes
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -86,32 +86,32 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T027 [P] [US1] Unit tests for `KeywordValidationService` in `CovenantPromptKey.Tests/Services/KeywordValidationServiceTests.cs`
-- [ ] T028 [P] [US1] Unit tests for `MarkdownService` in `CovenantPromptKey.Tests/Services/MarkdownServiceTests.cs`
-- [ ] T029 [P] [US1] Unit tests for `KeywordService.DetectKeywordsAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
-- [ ] T030 [P] [US1] Unit tests for `KeywordService.ApplyMaskAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
+- [X] T027 [P] [US1] Unit tests for `KeywordValidationService` in `CovenantPromptKey.Tests/Services/KeywordValidationServiceTests.cs`
+- [X] T028 [P] [US1] Unit tests for `MarkdownService` in `CovenantPromptKey.Tests/Services/MarkdownServiceTests.cs`
+- [X] T029 [P] [US1] Unit tests for `KeywordService.DetectKeywordsAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
+- [X] T030 [P] [US1] Unit tests for `KeywordService.ApplyMaskAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T031 [US1] Implement `KeywordValidationService` in `CovenantPromptKey/Services/Implementations/KeywordValidationService.cs`
-- [ ] T032 [US1] Implement `MarkdownService` (Markdig integration) in `CovenantPromptKey/Services/Implementations/MarkdownService.cs`
-- [ ] T033 [US1] Implement Aho-Corasick algorithm helper in `CovenantPromptKey/Services/Implementations/AhoCorasickMatcher.cs`
-- [ ] T034 [US1] Implement `KeywordService` (detect + mask) in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
-- [ ] T035 [US1] Implement `WorkSessionService` in `CovenantPromptKey/Services/Implementations/WorkSessionService.cs`
+- [X] T031 [US1] Implement `KeywordValidationService` in `CovenantPromptKey/Services/Implementations/KeywordValidationService.cs`
+- [X] T032 [US1] Implement `MarkdownService` (Markdig integration) in `CovenantPromptKey/Services/Implementations/MarkdownService.cs`
+- [X] T033 [US1] Implement Aho-Corasick algorithm helper in `CovenantPromptKey/Services/Implementations/AhoCorasickMatcher.cs`
+- [X] T034 [US1] Implement `KeywordService` (detect + mask) in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
+- [X] T035 [US1] Implement `WorkSessionService` in `CovenantPromptKey/Services/Implementations/WorkSessionService.cs`
 
 ### UI Components for User Story 1
 
-- [ ] T036 [P] [US1] Create `ThreeColumnLayout.razor` component in `CovenantPromptKey/Components/Shared/ThreeColumnLayout.razor`
-- [ ] T037 [P] [US1] Create `ThreeColumnLayout.razor.css` styles in `CovenantPromptKey/Components/Shared/ThreeColumnLayout.razor.css`
-- [ ] T038 [P] [US1] Create `ToastNotification.razor` component in `CovenantPromptKey/Components/Shared/ToastNotification.razor`
-- [ ] T039 [P] [US1] Create `ConfirmationDialog.razor` component in `CovenantPromptKey/Components/Shared/ConfirmationDialog.razor`
-- [ ] T040 [US1] Create `SourceTextEditor.razor` component in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
-- [ ] T041 [US1] Create `KeywordControlPanel.razor` component in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
-- [ ] T042 [US1] Create `StatisticsDashboard.razor` component in `CovenantPromptKey/Components/Shared/StatisticsDashboard.razor`
-- [ ] T043 [US1] Create `ResultViewer.razor` component in `CovenantPromptKey/Components/Shared/ResultViewer.razor`
-- [ ] T044 [US1] Create `MaskRestorePage.razor` (Mask tab only) in `CovenantPromptKey/Components/Pages/MaskRestorePage.razor`
-- [ ] T045 [US1] Update `NavMenu.razor` to include new navigation items in `CovenantPromptKey/Components/Layout/NavMenu.razor`
-- [ ] T046 [US1] Update global styles in `CovenantPromptKey/wwwroot/app.css` for keyword highlighting
+- [X] T036 [P] [US1] Create `ThreeColumnLayout.razor` component in `CovenantPromptKey/Components/Shared/ThreeColumnLayout.razor`
+- [X] T037 [P] [US1] Create `ThreeColumnLayout.razor.css` styles in `CovenantPromptKey/Components/Shared/ThreeColumnLayout.razor.css`
+- [X] T038 [P] [US1] Create `ToastNotification.razor` component in `CovenantPromptKey/Components/Shared/ToastNotification.razor`
+- [X] T039 [P] [US1] Create `ConfirmationDialog.razor` component in `CovenantPromptKey/Components/Shared/ConfirmationDialog.razor`
+- [X] T040 [US1] Create `SourceTextEditor.razor` component in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
+- [X] T041 [US1] Create `KeywordControlPanel.razor` component in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
+- [X] T042 [US1] Create `StatisticsDashboard.razor` component in `CovenantPromptKey/Components/Shared/StatisticsDashboard.razor`
+- [X] T043 [US1] Create `ResultViewer.razor` component in `CovenantPromptKey/Components/Shared/ResultViewer.razor`
+- [X] T044 [US1] Create `MaskRestorePage.razor` (Mask tab only) in `CovenantPromptKey/Components/Pages/MaskRestorePage.razor`
+- [X] T045 [US1] Update `NavMenu.razor` to include new navigation items in `CovenantPromptKey/Components/Layout/NavMenu.razor`
+- [X] T046 [US1] Update global styles in `CovenantPromptKey/wwwroot/app.css` for keyword highlighting
 
 **Checkpoint**: User Story 1 should be fully functional - mask workflow complete
 
@@ -125,21 +125,21 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T047 [P] [US2] Unit tests for `DictionaryService` in `CovenantPromptKey.Tests/Services/DictionaryServiceTests.cs`
-- [ ] T048 [P] [US2] Unit tests for `CsvService` in `CovenantPromptKey.Tests/Services/CsvServiceTests.cs`
+- [X] T047 [P] [US2] Unit tests for `DictionaryService` in `CovenantPromptKey.Tests/Services/DictionaryServiceTests.cs`
+- [X] T048 [P] [US2] Unit tests for `CsvService` in `CovenantPromptKey.Tests/Services/CsvServiceTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T049 [US2] Implement `DictionaryService` (CRUD + localStorage) in `CovenantPromptKey/Services/Implementations/DictionaryService.cs`
-- [ ] T050 [US2] Implement `CsvService` (CsvHelper integration) in `CovenantPromptKey/Services/Implementations/CsvService.cs`
+- [X] T049 [US2] Implement `DictionaryService` (CRUD + localStorage) in `CovenantPromptKey/Services/Implementations/DictionaryService.cs`
+- [X] T050 [US2] Implement `CsvService` (CsvHelper integration) in `CovenantPromptKey/Services/Implementations/CsvService.cs`
 
 ### UI Components for User Story 2
 
-- [ ] T051 [P] [US2] Create `ColorPicker.razor` component in `CovenantPromptKey/Components/Shared/ColorPicker.razor`
-- [ ] T052 [P] [US2] Create `KeywordForm.razor` component in `CovenantPromptKey/Components/Shared/KeywordForm.razor`
-- [ ] T053 [US2] Create `KeywordList.razor` component in `CovenantPromptKey/Components/Shared/KeywordList.razor`
-- [ ] T054 [US2] Create `CsvImportExport.razor` component in `CovenantPromptKey/Components/Shared/CsvImportExport.razor`
-- [ ] T055 [US2] Create `SettingsPage.razor` page in `CovenantPromptKey/Components/Pages/SettingsPage.razor`
+- [X] T051 [P] [US2] Create `ColorPicker.razor` component in `CovenantPromptKey/Components/Shared/ColorPicker.razor`
+- [X] T052 [P] [US2] Create `KeywordForm.razor` component in `CovenantPromptKey/Components/Shared/KeywordForm.razor`
+- [X] T053 [US2] Create `KeywordList.razor` component in `CovenantPromptKey/Components/Shared/KeywordList.razor`
+- [X] T054 [US2] Create `CsvImportExport.razor` component in `CovenantPromptKey/Components/Shared/CsvImportExport.razor`
+- [X] T055 [US2] Create `SettingsPage.razor` page in `CovenantPromptKey/Components/Pages/SettingsPage.razor`
 
 **Checkpoint**: User Story 2 should be fully functional - dictionary management complete
 
@@ -153,10 +153,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T056 [US3] Enhance `SourceTextEditor.razor` with line numbers and scroll-to-line in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
-- [ ] T057 [US3] Enhance `KeywordControlPanel.razor` with expandable position list in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
-- [ ] T058 [US3] Add click-to-toggle functionality on highlighted keywords in `SourceTextEditor.razor`
-- [ ] T059 [US3] Update JS interop for smooth scrolling and flash highlight in `CovenantPromptKey/wwwroot/js/interop.js`
+- [X] T056 [US3] Enhance `SourceTextEditor.razor` with line numbers and scroll-to-line in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
+- [X] T057 [US3] Enhance `KeywordControlPanel.razor` with expandable position list in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
+- [X] T058 [US3] Add click-to-toggle functionality on highlighted keywords in `SourceTextEditor.razor`
+- [X] T059 [US3] Update JS interop for smooth scrolling and flash highlight in `CovenantPromptKey/wwwroot/js/interop.js`
 
 **Checkpoint**: User Story 3 should be fully functional - detailed interaction complete
 
@@ -170,12 +170,12 @@
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T060 [P] [US4] Unit tests for `KeywordService.RestoreTextAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
+- [X] T060 [P] [US4] Unit tests for `KeywordService.RestoreTextAsync` in `CovenantPromptKey.Tests/Services/KeywordServiceTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T061 [US4] Implement restore logic in `KeywordService.RestoreTextAsync` in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
-- [ ] T062 [US4] Add Restore tab to `MaskRestorePage.razor` in `CovenantPromptKey/Components/Pages/MaskRestorePage.razor`
+- [X] T061 [US4] Implement restore logic in `KeywordService.RestoreTextAsync` in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
+- [X] T062 [US4] Add Restore tab to `MaskRestorePage.razor` in `CovenantPromptKey/Components/Pages/MaskRestorePage.razor`
 
 **Checkpoint**: User Story 4 should be fully functional - restore workflow complete
 
@@ -189,9 +189,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T063 [US5] Add context warning detection logic in `KeywordService.DetectKeywordsAsync` in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
-- [ ] T064 [US5] Update `KeywordControlPanel.razor` to display warning icons in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
-- [ ] T065 [US5] Update `SourceTextEditor.razor` to show warning visual style in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
+- [X] T063 [US5] Add context warning detection logic in `KeywordService.DetectKeywordsAsync` in `CovenantPromptKey/Services/Implementations/KeywordService.cs`
+- [X] T064 [US5] Update `KeywordControlPanel.razor` to display warning icons in `CovenantPromptKey/Components/Shared/KeywordControlPanel.razor`
+- [X] T065 [US5] Update `SourceTextEditor.razor` to show warning visual style in `CovenantPromptKey/Components/Shared/SourceTextEditor.razor`
 
 **Checkpoint**: User Story 5 should be fully functional - context warnings complete
 
@@ -205,10 +205,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T066 [P] [US6] Create `LogViewer.razor` component in `CovenantPromptKey/Components/Shared/LogViewer.razor`
-- [ ] T067 [US6] Create `DebugLogPage.razor` page in `CovenantPromptKey/Components/Pages/DebugLogPage.razor`
-- [ ] T068 [US6] Add logging calls throughout services (KeywordService, DictionaryService, CsvService)
-- [ ] T069 [US6] Add copy-to-clipboard functionality in JS interop for logs in `CovenantPromptKey/wwwroot/js/interop.js`
+- [X] T066 [P] [US6] Create `LogViewer.razor` component in `CovenantPromptKey/Components/Shared/LogViewer.razor`
+- [X] T067 [US6] Create `DebugLogPage.razor` page in `CovenantPromptKey/Components/Pages/DebugLogPage.razor`
+- [X] T068 [US6] Add logging calls throughout services (KeywordService, DictionaryService, CsvService)
+- [X] T069 [US6] Add copy-to-clipboard functionality in JS interop for logs in `CovenantPromptKey/wwwroot/js/interop.js`
 
 **Checkpoint**: User Story 6 should be fully functional - debug log complete
 
@@ -218,13 +218,13 @@
 
 **Purpose**: Additional pages, improvements that affect multiple user stories
 
-- [ ] T070 [P] Create `HelpPage.razor` in `CovenantPromptKey/Components/Pages/HelpPage.razor`
-- [ ] T071 [P] Create `AboutPage.razor` in `CovenantPromptKey/Components/Pages/AboutPage.razor`
-- [ ] T072 [P] Create `ReportIssuePage.razor` in `CovenantPromptKey/Components/Pages/ReportIssuePage.razor`
-- [ ] T073 [P] Create `ChangelogPage.razor` in `CovenantPromptKey/Components/Pages/ChangelogPage.razor`
-- [ ] T074 Add keyboard shortcuts (Ctrl+V, Ctrl+A, Ctrl+Enter, Ctrl+C, Escape) in `CovenantPromptKey/wwwroot/js/interop.js`
-- [ ] T075 Performance optimization: verify 1000-char detection < 200ms, 100K-char < 1000ms
-- [ ] T076 Run quickstart.md validation - verify all test scenarios pass
+- [X] T070 [P] Create `HelpPage.razor` in `CovenantPromptKey/Components/Pages/HelpPage.razor`
+- [X] T071 [P] Create `AboutPage.razor` in `CovenantPromptKey/Components/Pages/AboutPage.razor`
+- [X] T072 [P] Create `ReportIssuePage.razor` in `CovenantPromptKey/Components/Pages/ReportIssuePage.razor`
+- [X] T073 [P] Create `ChangelogPage.razor` in `CovenantPromptKey/Components/Pages/ChangelogPage.razor`
+- [X] T074 Add keyboard shortcuts (Ctrl+V, Ctrl+A, Ctrl+Enter, Ctrl+C, Escape) in `CovenantPromptKey/wwwroot/js/interop.js`
+- [X] T075 Performance optimization: verify 1000-char detection < 200ms, 100K-char < 1000ms
+- [X] T076 Run quickstart.md validation - verify all test scenarios pass
 
 ---
 

@@ -1,0 +1,294 @@
+@* KeywordControlPanel.razor - 關鍵字控制面板組件 *@
+@* Keyword list with checkboxes, count display, and selection controls *@
+
+<div class="keyword-control-panel">
+    <div class="panel-header">
+        <h6 class="panel-title">
+            <i class="bi bi-key"></i> 偵測到的關鍵字
+        </h6>
+        <span class="keyword-count">
+            @SelectedCount / @TotalCount 已選擇
+        </span>
+    </div>
+    
+    @if (DetectedKeywords == null || !DetectedKeywords.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <p>尚未偵測到關鍵字</p>
+            <small>請先輸入原文並載入字典檔</small>
+        </div>
+    }
+    else
+    {
+        <div class="panel-toolbar">
+            <button class="btn btn-sm btn-outline-primary" 
+                    @onclick="SelectAll"
+                    disabled="@(AllSelected || IsDisabled)"
+                    title="全選">
+                <i class="bi bi-check-all"></i> 全選
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" 
+                    @onclick="DeselectAll"
+                    disabled="@(NoneSelected || IsDisabled)"
+                    title="取消全選">
+                <i class="bi bi-x-lg"></i> 清除
+            </button>
+            <button class="btn btn-sm btn-outline-info" 
+                    @onclick="InvertSelection"
+                    disabled="@IsDisabled"
+                    title="反向選擇">
+                <i class="bi bi-arrow-repeat"></i> 反選
+            </button>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(SearchTerm) || ShowSearch)
+        {
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" 
+                       class="form-control form-control-sm" 
+                       placeholder="搜尋關鍵字..."
+                       @bind="SearchTerm"
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(SearchTerm))
+                {
+                    <button class="btn btn-sm btn-link clear-search" @onclick="ClearSearch">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        }
+        
+        <div class="keyword-list">
+            @foreach (var keyword in FilteredKeywords)
+            {
+                var isExpanded = _expandedKeywords.Contains(keyword.Mapping.SensitiveKey);
+                <div class="keyword-item-container">
+                    <div class="keyword-item @(keyword.IsSelected ? "selected" : "") @(HighlightedKeyword == keyword.Mapping.SensitiveKey ? "highlighted" : "")"
+                         @onclick="() => ToggleKeyword(keyword)"
+                         @onclick:stopPropagation="true">
+                        <div class="keyword-checkbox">
+                            <input type="checkbox" 
+                                   checked="@keyword.IsSelected"
+                                   disabled="@IsDisabled"
+                                   @onclick:stopPropagation="true"
+                                   @onchange="() => ToggleKeyword(keyword)" />
+                        </div>
+                        
+                        <div class="keyword-color" 
+                             style="background-color: @(keyword.Mapping.HighlightColor ?? "#ffc107")">
+                        </div>
+                        
+                        <div class="keyword-info">
+                            <div class="keyword-original" title="@keyword.Mapping.SensitiveKey">
+                                @TruncateText(keyword.Mapping.SensitiveKey, 20)
+                            </div>
+                            <div class="keyword-replacement" title="替換為: @keyword.Mapping.SafeKey">
+                                <i class="bi bi-arrow-right"></i> @TruncateText(keyword.Mapping.SafeKey, 15)
+                            </div>
+                        </div>
+                        
+                        <div class="keyword-count-badge" title="出現 @keyword.Count 次">
+                            @keyword.Count
+                        </div>
+                        
+                        @if (keyword.HasWarning)
+                        {
+                            <span class="keyword-warning-icon" title="注意：此關鍵字前後緊鄰中文字元，可能造成誤替換">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                            </span>
+                        }
+                        
+                        @if (keyword.Occurrences?.Any() == true)
+                        {
+                            <button class="expand-btn" 
+                                    @onclick="() => ToggleExpand(keyword.Mapping.SensitiveKey)"
+                                    @onclick:stopPropagation="true"
+                                    title="@(isExpanded ? "收合位置列表" : "展開位置列表")">
+                                <i class="bi @(isExpanded ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                            </button>
+                        }
+                    </div>
+                    
+                    @if (isExpanded && keyword.Occurrences?.Any() == true)
+                    {
+                        <div class="keyword-occurrences">
+                            <div class="occurrences-header">
+                                <i class="bi bi-geo-alt"></i> 出現位置 (點擊跳轉)
+                            </div>
+                            <div class="occurrences-list">
+                                @foreach (var occ in keyword.Occurrences.Take(MaxOccurrencesToShow))
+                                {
+                                    <button class="occurrence-btn"
+                                            @onclick="() => HandleLineClick(occ.LineNumber)"
+                                            @onclick:stopPropagation="true"
+                                            title="跳至第 @occ.LineNumber 行">
+                                        <span class="line-badge">L@occ.LineNumber</span>
+                                        <span class="occurrence-preview">@TruncateText(occ.OriginalText, 15)</span>
+                                    </button>
+                                }
+                                @if (keyword.Occurrences.Count() > MaxOccurrencesToShow)
+                                {
+                                    <span class="more-occurrences">
+                                        ... 還有 @(keyword.Occurrences.Count() - MaxOccurrencesToShow) 處
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        @if (FilteredKeywords.Count() < DetectedKeywords.Count())
+        {
+            <div class="filter-info">
+                顯示 @FilteredKeywords.Count() / @DetectedKeywords.Count() 個關鍵字
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<DetectedKeyword>? DetectedKeywords { get; set; }
+    
+    [Parameter]
+    public EventCallback<DetectedKeyword> OnKeywordToggled { get; set; }
+    
+    [Parameter]
+    public EventCallback<IEnumerable<DetectedKeyword>> OnSelectionChanged { get; set; }
+    
+    [Parameter]
+    public EventCallback<int> OnLineClicked { get; set; }
+    
+    [Parameter]
+    public string? HighlightedKeyword { get; set; }
+    
+    [Parameter]
+    public bool IsDisabled { get; set; } = false;
+    
+    [Parameter]
+    public bool ShowSearch { get; set; } = true;
+    
+    [Parameter]
+    public int MaxOccurrencesToShow { get; set; } = 10;
+    
+    private string SearchTerm { get; set; } = string.Empty;
+    private HashSet<string> _expandedKeywords = [];
+    
+    private int TotalCount => DetectedKeywords?.Count() ?? 0;
+    private int SelectedCount => DetectedKeywords?.Count(k => k.IsSelected) ?? 0;
+    private bool AllSelected => TotalCount > 0 && SelectedCount == TotalCount;
+    private bool NoneSelected => SelectedCount == 0;
+    
+    private IEnumerable<DetectedKeyword> FilteredKeywords
+    {
+        get
+        {
+            if (DetectedKeywords == null)
+                return Enumerable.Empty<DetectedKeyword>();
+            
+            if (string.IsNullOrWhiteSpace(SearchTerm))
+                return DetectedKeywords.OrderByDescending(k => k.Count);
+            
+            var term = SearchTerm.Trim().ToLowerInvariant();
+            return DetectedKeywords
+                .Where(k => k.Mapping.SensitiveKey.ToLowerInvariant().Contains(term) ||
+                           k.Mapping.SafeKey.ToLowerInvariant().Contains(term))
+                .OrderByDescending(k => k.Count);
+        }
+    }
+    
+    private async Task ToggleKeyword(DetectedKeyword keyword)
+    {
+        if (IsDisabled) return;
+        
+        keyword.IsSelected = !keyword.IsSelected;
+        
+        if (OnKeywordToggled.HasDelegate)
+        {
+            await OnKeywordToggled.InvokeAsync(keyword);
+        }
+        
+        await NotifySelectionChanged();
+    }
+    
+    private async Task SelectAll()
+    {
+        if (DetectedKeywords == null || IsDisabled) return;
+        
+        foreach (var keyword in DetectedKeywords)
+        {
+            keyword.IsSelected = true;
+        }
+        
+        await NotifySelectionChanged();
+    }
+    
+    private async Task DeselectAll()
+    {
+        if (DetectedKeywords == null || IsDisabled) return;
+        
+        foreach (var keyword in DetectedKeywords)
+        {
+            keyword.IsSelected = false;
+        }
+        
+        await NotifySelectionChanged();
+    }
+    
+    private async Task InvertSelection()
+    {
+        if (DetectedKeywords == null || IsDisabled) return;
+        
+        foreach (var keyword in DetectedKeywords)
+        {
+            keyword.IsSelected = !keyword.IsSelected;
+        }
+        
+        await NotifySelectionChanged();
+    }
+    
+    private void ClearSearch()
+    {
+        SearchTerm = string.Empty;
+    }
+    
+    private async Task NotifySelectionChanged()
+    {
+        if (OnSelectionChanged.HasDelegate && DetectedKeywords != null)
+        {
+            await OnSelectionChanged.InvokeAsync(DetectedKeywords.Where(k => k.IsSelected));
+        }
+    }
+    
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+        
+        return text.Substring(0, maxLength - 1) + "…";
+    }
+    
+    private void ToggleExpand(string sensitiveKey)
+    {
+        if (_expandedKeywords.Contains(sensitiveKey))
+        {
+            _expandedKeywords.Remove(sensitiveKey);
+        }
+        else
+        {
+            _expandedKeywords.Add(sensitiveKey);
+        }
+    }
+    
+    private async Task HandleLineClick(int lineNumber)
+    {
+        if (OnLineClicked.HasDelegate)
+        {
+            await OnLineClicked.InvokeAsync(lineNumber);
+        }
+    }
+}

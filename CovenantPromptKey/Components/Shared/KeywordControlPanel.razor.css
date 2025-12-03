@@ -1,0 +1,367 @@
+/* KeywordControlPanel.razor.css - 關鍵字控制面板樣式 */
+
+.keyword-control-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    background: var(--bs-body-bg);
+    overflow: hidden;
+}
+
+/* Panel header */
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    flex-shrink: 0;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.keyword-count {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
+}
+
+/* Panel toolbar */
+.panel-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    flex-shrink: 0;
+}
+
+.panel-toolbar .btn {
+    flex: 1;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Search box */
+.search-box {
+    position: relative;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    flex-shrink: 0;
+}
+
+.search-box i.bi-search {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+}
+
+.search-box input {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.search-box .clear-search {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    color: var(--bs-secondary-color);
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    color: var(--bs-secondary-color);
+    flex: 1;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.empty-state small {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Keyword list */
+.keyword-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+/* Keyword item */
+.keyword-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: var(--bs-body-bg);
+    border: 1px solid transparent;
+}
+
+.keyword-item:hover {
+    background: var(--bs-tertiary-bg);
+}
+
+.keyword-item.selected {
+    background: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-border-subtle);
+}
+
+.keyword-item.highlighted {
+    background: var(--bs-warning-bg-subtle);
+    border-color: var(--bs-warning-border-subtle);
+    box-shadow: 0 0 0 2px var(--bs-warning);
+}
+
+/* Checkbox */
+.keyword-checkbox {
+    flex-shrink: 0;
+}
+
+.keyword-checkbox input {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+/* Color indicator */
+.keyword-color {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Keyword info */
+.keyword-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.keyword-original {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bs-body-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.keyword-replacement {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.keyword-replacement i {
+    font-size: 0.625rem;
+}
+
+/* Count badge */
+.keyword-count-badge {
+    flex-shrink: 0;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    background: var(--bs-secondary-bg);
+    border-radius: 0.75rem;
+    padding: 0 0.5rem;
+}
+
+.keyword-item.selected .keyword-count-badge {
+    background: var(--bs-primary);
+    color: white;
+}
+
+/* Filter info */
+.filter-info {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
+    border-top: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+    flex-shrink: 0;
+}
+
+/* Scrollbar styling */
+.keyword-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.keyword-list::-webkit-scrollbar-track {
+    background: var(--bs-tertiary-bg);
+}
+
+.keyword-list::-webkit-scrollbar-thumb {
+    background: var(--bs-secondary-bg);
+    border-radius: 3px;
+}
+
+.keyword-list::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-secondary-color);
+}
+
+/* Keyword item container for expandable items */
+.keyword-item-container {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.keyword-item-container:last-child {
+    border-bottom: none;
+}
+
+/* Expand button */
+.expand-btn {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--bs-secondary-color);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.expand-btn:hover {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+
+/* Occurrences section */
+.keyword-occurrences {
+    padding: 0.5rem 0.75rem 0.75rem 2.5rem;
+    background: var(--bs-tertiary-bg);
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.occurrences-header {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.occurrences-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.occurrence-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.occurrence-btn:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+.line-badge {
+    font-weight: 600;
+    color: var(--bs-primary);
+}
+
+.occurrence-btn:hover .line-badge {
+    color: white;
+}
+
+.occurrence-preview {
+    color: var(--bs-secondary-color);
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.occurrence-btn:hover .occurrence-preview {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.more-occurrences {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    padding: 0.25rem 0.5rem;
+}
+
+/* Warning icon for context warning */
+.keyword-warning-icon {
+    flex-shrink: 0;
+    color: var(--bs-warning);
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+    animation: warning-pulse 2s ease-in-out infinite;
+}
+
+@keyframes warning-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}

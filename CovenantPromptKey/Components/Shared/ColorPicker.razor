@@ -1,0 +1,56 @@
+@namespace CovenantPromptKey.Components.Shared
+
+@using CovenantPromptKey.Constants
+
+<div class="color-picker">
+    <label class="color-picker__label">@Label</label>
+    <div class="color-picker__grid">
+        @foreach (var color in AvailableColors)
+        {
+            <button type="button"
+                    class="color-picker__swatch @(color == SelectedColor ? "color-picker__swatch--selected" : "")"
+                    style="background-color: @color"
+                    @onclick="() => SelectColor(color)"
+                    title="@color">
+                @if (color == SelectedColor)
+                {
+                    <span class="color-picker__check">✓</span>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 標籤文字
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = "選擇顏色";
+
+    /// <summary>
+    /// 當前選擇的顏色 (HEX 格式)
+    /// </summary>
+    [Parameter]
+    public string SelectedColor { get; set; } = AppConstants.DefaultColors[0];
+
+    /// <summary>
+    /// 選擇顏色時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnColorSelected { get; set; }
+
+    /// <summary>
+    /// 可選顏色列表 (預設使用 AppConstants.DefaultColors)
+    /// </summary>
+    [Parameter]
+    public string[] Colors { get; set; } = [];
+
+    private string[] AvailableColors => Colors.Length > 0 ? Colors : AppConstants.DefaultColors;
+
+    private async Task SelectColor(string color)
+    {
+        SelectedColor = color;
+        await OnColorSelected.InvokeAsync(color);
+    }
+}

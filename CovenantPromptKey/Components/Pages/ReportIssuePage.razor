@@ -1,0 +1,188 @@
+@page "/report-issue"
+@rendermode InteractiveServer
+
+@using CovenantPromptKey.Services.Interfaces
+
+@inject IDebugLogService DebugLogService
+@inject IJSRuntime JS
+
+<PageTitle>回報問題 - CovenantPromptKey</PageTitle>
+
+<div class="report-page">
+    <div class="page-header">
+        <h1>
+            <i class="bi bi-bug me-2"></i>
+            回報問題
+        </h1>
+        <p class="text-muted">發現問題？讓我們知道，以便改進</p>
+    </div>
+
+    <div class="report-sections">
+        <!-- Report Form -->
+        <section class="report-section">
+            <h2><i class="bi bi-pencil-square me-2"></i>問題描述</h2>
+            <div class="section-content">
+                <div class="mb-3">
+                    <label class="form-label">問題類型</label>
+                    <select class="form-select" @bind="_issueType">
+                        <option value="">請選擇...</option>
+                        <option value="bug">程式錯誤 (Bug)</option>
+                        <option value="feature">功能建議</option>
+                        <option value="ux">使用體驗問題</option>
+                        <option value="performance">效能問題</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">問題標題</label>
+                    <input type="text" class="form-control" @bind="_issueTitle" 
+                           placeholder="簡短描述問題" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">詳細描述</label>
+                    <textarea class="form-control" rows="5" @bind="_issueDescription"
+                              placeholder="請詳細描述問題，包括操作步驟、預期結果與實際結果"></textarea>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" @bind="_includeDebugLog" id="includeLog">
+                    <label class="form-check-label" for="includeLog">
+                        附上除錯日誌（建議）
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Preview -->
+        <section class="report-section">
+            <h2><i class="bi bi-eye me-2"></i>報告預覽</h2>
+            <div class="section-content">
+                <div class="report-preview">
+                    <pre>@GenerateReport()</pre>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" @onclick="CopyReport">
+                        <i class="bi bi-clipboard me-1"></i>
+                        複製報告
+                    </button>
+                    <a class="btn btn-outline-secondary" href="https://github.com/your-repo/issues/new" 
+                       target="_blank" rel="noopener">
+                        <i class="bi bi-github me-1"></i>
+                        前往 GitHub Issue
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tips -->
+        <section class="report-section">
+            <h2><i class="bi bi-lightbulb me-2"></i>回報提示</h2>
+            <div class="section-content">
+                <ul class="tip-list">
+                    <li>
+                        <i class="bi bi-check2 text-success"></i>
+                        <span>描述重現問題的具體步驟</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2 text-success"></i>
+                        <span>說明您預期的行為與實際發生的行為</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2 text-success"></i>
+                        <span>附上除錯日誌有助於快速定位問題</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2 text-success"></i>
+                        <span>如果可能，請附上螢幕截圖</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    @if (_showCopySuccess)
+    {
+        <div class="toast-overlay">
+            <div class="toast show" role="alert">
+                <div class="toast-body text-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    報告已複製到剪貼簿
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string _issueType = "";
+    private string _issueTitle = "";
+    private string _issueDescription = "";
+    private bool _includeDebugLog = true;
+    private bool _showCopySuccess = false;
+
+    private string GenerateReport()
+    {
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine("## 問題報告");
+        sb.AppendLine();
+        sb.AppendLine($"**類型**: {GetIssueTypeLabel(_issueType)}");
+        sb.AppendLine($"**標題**: {(_issueTitle.Length > 0 ? _issueTitle : "(未填寫)")}");
+        sb.AppendLine();
+        sb.AppendLine("### 詳細描述");
+        sb.AppendLine(_issueDescription.Length > 0 ? _issueDescription : "(未填寫)");
+        sb.AppendLine();
+        sb.AppendLine("### 環境資訊");
+        sb.AppendLine($"- 應用程式版本: 1.0.0");
+        sb.AppendLine($"- 時間: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+        if (_includeDebugLog)
+        {
+            var logs = DebugLogService.GetFormattedLogs();
+            if (!string.IsNullOrEmpty(logs))
+            {
+                sb.AppendLine();
+                sb.AppendLine("### 除錯日誌");
+                sb.AppendLine("```");
+                sb.AppendLine(logs);
+                sb.AppendLine("```");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private static string GetIssueTypeLabel(string type) => type switch
+    {
+        "bug" => "程式錯誤 (Bug)",
+        "feature" => "功能建議",
+        "ux" => "使用體驗問題",
+        "performance" => "效能問題",
+        "other" => "其他",
+        _ => "(未選擇)"
+    };
+
+    private async Task CopyReport()
+    {
+        var report = GenerateReport();
+        
+        try
+        {
+            await JS.InvokeVoidAsync("CovenantPromptKey.copyToClipboard", report);
+            DebugLogService.Log("問題報告已複製", Models.LogLevel.Info, "ReportIssuePage");
+            
+            _showCopySuccess = true;
+            StateHasChanged();
+            
+            await Task.Delay(2000);
+            _showCopySuccess = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"複製報告失敗: {ex.Message}", Models.LogLevel.Error, "ReportIssuePage");
+        }
+    }
+}

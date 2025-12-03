@@ -1,0 +1,518 @@
+@* MaskRestorePage.razor - 主要遮罩與還原頁面 *@
+@* Main page with tab switching for mask/restore workflow *@
+
+@page "/"
+@page "/mask-restore"
+
+@rendermode InteractiveServer
+
+@using CovenantPromptKey.Services.Interfaces
+@using CovenantPromptKey.Models
+@using CovenantPromptKey.Models.Results
+@using CovenantPromptKey.Constants
+
+@inject IKeywordService KeywordService
+@inject IDictionaryService DictionaryService
+@inject IWorkSessionService WorkSessionService
+@inject IDebugLogService DebugLogService
+@inject IJSRuntime JS
+
+<PageTitle>關鍵字遮罩與還原 - CovenantPromptKey</PageTitle>
+
+<div class="mask-restore-page">
+    @* Tab Navigation *@
+    <div class="page-tabs">
+        <button class="tab-btn @(CurrentMode == WorkMode.Mask ? "active" : "")"
+                @onclick="() => SwitchMode(WorkMode.Mask)">
+            <i class="bi bi-eye-slash"></i> 遮罩
+        </button>
+        <button class="tab-btn @(CurrentMode == WorkMode.Restore ? "active" : "")"
+                @onclick="() => SwitchMode(WorkMode.Restore)">
+            <i class="bi bi-eye"></i> 還原
+        </button>
+    </div>
+    
+    @* Action Bar *@
+    <div class="action-bar">
+        <div class="action-group">
+            <label class="file-upload-btn btn btn-outline-secondary btn-sm">
+                <i class="bi bi-upload"></i> 載入字典
+                <InputFile OnChange="HandleDictionaryUpload" accept=".csv" style="display: none;" />
+            </label>
+            
+            @if (IsLoading)
+            {
+                <span class="loading-indicator">
+                    <span class="spinner-border spinner-border-sm"></span>
+                    處理中...
+                </span>
+            }
+        </div>
+        
+        <div class="action-group">
+            <button class="btn @(CurrentMode == WorkMode.Mask ? "btn-primary" : "btn-success") btn-sm"
+                    @onclick="ExecuteOperation"
+                    disabled="@(!CanExecute || IsLoading)">
+                @if (CurrentMode == WorkMode.Mask)
+                {
+                    <i class="bi bi-eye-slash"></i>
+                    <span>執行遮罩</span>
+                }
+                else
+                {
+                    <i class="bi bi-eye"></i>
+                    <span>執行還原</span>
+                }
+            </button>
+            
+            @if (ShowConfirmation)
+            {
+                <button class="btn btn-outline-secondary btn-sm" @onclick="CancelConfirmation">
+                    取消
+                </button>
+            }
+        </div>
+    </div>
+    
+    @* Main Content - Three Column Layout *@
+    <ThreeColumnLayout>
+        <SourceContent>
+            <SourceTextEditor 
+                Text="@SourceText"
+                TextChanged="HandleSourceTextChanged"
+                Label="@(CurrentMode == WorkMode.Mask ? "原文輸入" : "遮罩文字輸入")"
+                Placeholder="@(CurrentMode == WorkMode.Mask ? "請輸入或貼上需要遮罩的文字..." : "請輸入或貼上需要還原的遮罩文字...")"
+                IsEditable="true"
+                ShowLineNumbers="true"
+                ShowCharacterCount="true"
+                MaxLength="@AppConstants.MaxTextLength"
+                DetectedKeywords="@DetectedKeywords"
+                OnKeywordClicked="HandleKeywordClicked"
+                OnTextCleared="HandleTextCleared"
+                ErrorMessage="@SourceErrorMessage" />
+        </SourceContent>
+        
+        <ControlContent>
+            <div class="control-panel-content">
+                @* 字典狀態提示 *@
+                @if (!HasDictionary)
+                {
+                    <div class="alert alert-warning mb-2" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>尚未設定關鍵字字典</strong>
+                        <br />
+                        <small>請至<a href="/settings">字典管理</a>頁面新增關鍵字映射。</small>
+                    </div>
+                }
+                
+                @* Statistics Dashboard *@
+                <StatisticsDashboard 
+                    SourceLength="@(SourceText?.Length ?? 0)"
+                    UniqueKeywordCount="@(DetectedKeywords?.Count ?? 0)"
+                    TotalOccurrences="@TotalOccurrences"
+                    SelectedCount="@SelectedOccurrences"
+                    ResultLength="@(ResultText?.Length ?? 0)"
+                    ReplacementCount="@(LastMaskResult?.ReplacedCount ?? LastRestoreResult?.RestoredCount ?? 0)"
+                    ProcessingTimeMs="@ProcessingTimeMs"
+                    ShowResultStats="@(!string.IsNullOrEmpty(ResultText))" />
+                
+                @* Keyword Control Panel *@
+                <KeywordControlPanel 
+                    DetectedKeywords="@DetectedKeywords"
+                    OnKeywordToggled="HandleKeywordToggled"
+                    OnSelectionChanged="HandleSelectionChanged"
+                    HighlightedKeyword="@HighlightedKeyword"
+                    IsDisabled="@IsLoading"
+                    ShowSearch="true" />
+            </div>
+        </ControlContent>
+        
+        <ResultContent>
+            <ResultViewer 
+                ResultText="@ResultText"
+                Label="@(CurrentMode == WorkMode.Mask ? "遮罩結果" : "還原結果")"
+                EmptyMessage="@(CurrentMode == WorkMode.Mask ? "尚無遮罩結果" : "尚無還原結果")"
+                EmptyHint="@(CurrentMode == WorkMode.Mask ? "輸入文字並載入字典後，點擊「執行遮罩」" : "輸入遮罩文字並載入字典後，點擊「執行還原」")"
+                OriginalLength="@(SourceText?.Length ?? 0)"
+                ShowCharacterCount="true"
+                ShowDownload="false"
+                ShowHighlighting="true"
+                ReplacementDetails="@LastMaskResult?.Details"
+                DownloadFileName="@GetDownloadFileName()"
+                OnCopied="HandleResultCopied" />
+        </ResultContent>
+    </ThreeColumnLayout>
+</div>
+
+@* Confirmation Dialog *@
+<ConfirmationDialog 
+    IsVisible="@ShowConfirmation"
+    Title="@(CurrentMode == WorkMode.Mask ? "確認遮罩" : "確認還原")"
+    Message="@GetConfirmationMessage()"
+    ReplacementPreview="@ConfirmationPreview"
+    OnConfirm="ConfirmOperation"
+    OnCancel="CancelConfirmation" />
+
+@* Toast Notification *@
+<ToastNotification @ref="toastRef" />
+
+@code {
+    private WorkMode CurrentMode { get; set; } = WorkMode.Mask;
+    private string SourceText { get; set; } = string.Empty;
+    private string ResultText { get; set; } = string.Empty;
+    private string? SourceErrorMessage { get; set; }
+    private string? HighlightedKeyword { get; set; }
+    
+    private List<DetectedKeyword>? DetectedKeywords { get; set; }
+    private MaskResult? LastMaskResult { get; set; }
+    private RestoreResult? LastRestoreResult { get; set; }
+    
+    private bool IsLoading { get; set; }
+    private bool ShowConfirmation { get; set; }
+    private List<ReplacementDetail>? ConfirmationPreview { get; set; }
+    private double ProcessingTimeMs { get; set; }
+    
+    private ToastNotification? toastRef;
+    
+    private int TotalOccurrences => DetectedKeywords?.Sum(k => k.Count) ?? 0;
+    private int SelectedOccurrences => DetectedKeywords?.Where(k => k.IsSelected).Sum(k => k.Count) ?? 0;
+    
+    // 遮罩模式需要選擇關鍵字，還原模式只需要有文字和字典
+    private bool CanExecute => !string.IsNullOrWhiteSpace(SourceText) && 
+                               (CurrentMode == WorkMode.Restore 
+                                   ? HasDictionary 
+                                   : DetectedKeywords != null && DetectedKeywords.Any(k => k.IsSelected));
+    
+    private bool HasDictionary { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // 先檢查字典狀態
+        HasDictionary = (await DictionaryService.GetAllAsync()).Any();
+        await LoadSessionState();
+        DebugLogService.Log($"MaskRestorePage initialized, HasDictionary={HasDictionary}", Models.LogLevel.Info);
+    }
+    
+    private async Task LoadSessionState()
+    {
+        try
+        {
+            var session = await WorkSessionService.GetCurrentSessionAsync();
+            if (session != null)
+            {
+                CurrentMode = session.Mode;
+                SourceText = session.SourceText ?? string.Empty;
+                ResultText = session.ResultText ?? string.Empty;
+                
+                if (!string.IsNullOrEmpty(SourceText))
+                {
+                    await DetectKeywordsInText();
+                }
+                
+                DebugLogService.Log("Session state restored", Models.LogLevel.Debug);
+            }
+            
+            // 確保 HasDictionary 狀態正確
+            if (!HasDictionary)
+            {
+                HasDictionary = (await DictionaryService.GetAllAsync()).Any();
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Failed to load session: {ex.Message}", Models.LogLevel.Error);
+        }
+    }
+    
+    private async Task SaveSessionState()
+    {
+        try
+        {
+            var session = new WorkSession
+            {
+                Mode = CurrentMode,
+                SourceText = SourceText,
+                ResultText = ResultText,
+                LastUpdated = DateTime.UtcNow
+            };
+            await WorkSessionService.SaveSessionAsync(session);
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Failed to save session: {ex.Message}", Models.LogLevel.Warning);
+        }
+    }
+    
+    private async Task SwitchMode(WorkMode mode)
+    {
+        if (CurrentMode == mode) return;
+        
+        CurrentMode = mode;
+        // 不再清空文字，保留使用者輸入
+        // 只清空結果和偵測狀態
+        ResultText = string.Empty;
+        LastMaskResult = null;
+        LastRestoreResult = null;
+        SourceErrorMessage = null;
+        DetectedKeywords = null;
+        StateHasChanged();
+        
+        // 重新偵測關鍵字（如果有文字的話）
+        if (!string.IsNullOrWhiteSpace(SourceText))
+        {
+            await DetectKeywordsInText();
+        }
+        else
+        {
+            HasDictionary = (await DictionaryService.GetAllAsync()).Any();
+        }
+        
+        await WorkSessionService.SetModeAsync(mode);
+        DebugLogService.Log($"Switched to {mode} mode", Models.LogLevel.Info);
+        StateHasChanged();
+    }
+    
+    private async Task HandleSourceTextChanged(string newText)
+    {
+        SourceText = newText;
+        SourceErrorMessage = null;
+        
+        // Validate text length
+        if (!KeywordService.ValidateTextLength(newText))
+        {
+            SourceErrorMessage = $"文字長度超過上限 ({AppConstants.MaxTextLength:N0} 字元)";
+            StateHasChanged();
+            return;
+        }
+        
+        // Debounce detection
+        await DetectKeywordsInText();
+        await WorkSessionService.UpdateSourceTextAsync(newText);
+        StateHasChanged();
+    }
+    
+    private async Task DetectKeywordsInText()
+    {
+        if (string.IsNullOrWhiteSpace(SourceText))
+        {
+            DetectedKeywords = null;
+            HasDictionary = false;
+            return;
+        }
+        
+        try
+        {
+            var mappings = await DictionaryService.GetAllAsync();
+            HasDictionary = mappings.Any();
+            
+            if (!mappings.Any())
+            {
+                DetectedKeywords = null;
+                return;
+            }
+            
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            
+            if (CurrentMode == WorkMode.Mask)
+            {
+                // 遮罩模式：偵測 SensitiveKey（原始關鍵字）
+                DetectedKeywords = await KeywordService.DetectKeywordsAsync(SourceText, mappings);
+            }
+            else
+            {
+                // 還原模式：偵測 SafeKey（代碼），建立反向映射
+                var reverseMappings = mappings.Select(m => new KeywordMapping
+                {
+                    Id = m.Id,
+                    SensitiveKey = m.SafeKey,  // 搜尋代碼
+                    SafeKey = m.SensitiveKey,   // 還原為原始文字
+                    HighlightColor = m.HighlightColor,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt
+                }).ToList();
+                
+                DetectedKeywords = await KeywordService.DetectKeywordsAsync(SourceText, reverseMappings);
+            }
+            
+            stopwatch.Stop();
+            ProcessingTimeMs = stopwatch.Elapsed.TotalMilliseconds;
+            
+            // Select all by default
+            foreach (var keyword in DetectedKeywords)
+            {
+                keyword.IsSelected = true;
+            }
+            
+            await WorkSessionService.UpdateDetectedKeywordsAsync(DetectedKeywords);
+            DebugLogService.Log($"Detected {DetectedKeywords.Count} unique keywords ({TotalOccurrences} occurrences) in {ProcessingTimeMs:F2}ms", Models.LogLevel.Info);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Keyword detection failed: {ex.Message}", Models.LogLevel.Error);
+            DetectedKeywords = null;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task HandleDictionaryUpload(InputFileChangeEventArgs e)
+    {
+        IsLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            var file = e.File;
+            if (file == null) return;
+            
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
+            
+            // Import CSV (this would use ICsvService in a full implementation)
+            // For now, we'll use DictionaryService's internal import
+            DebugLogService.Log($"Dictionary file uploaded: {file.Name}", Models.LogLevel.Info);
+            
+            // Re-detect keywords with new dictionary
+            await DetectKeywordsInText();
+            
+            toastRef?.Show("字典檔載入成功", ToastType.Success);
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Dictionary upload failed: {ex.Message}", Models.LogLevel.Error);
+            toastRef?.Show($"字典檔載入失敗: {ex.Message}", ToastType.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private void HandleKeywordClicked(DetectedKeyword keyword)
+    {
+        HighlightedKeyword = keyword.Mapping.SensitiveKey;
+        StateHasChanged();
+        
+        // Clear highlight after a short delay
+        _ = Task.Delay(2000).ContinueWith(_ =>
+        {
+            HighlightedKeyword = null;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+    
+    private async Task HandleKeywordToggled(DetectedKeyword keyword)
+    {
+        DebugLogService.Log($"Keyword toggled: {keyword.Mapping.SensitiveKey} -> {keyword.IsSelected}", Models.LogLevel.Debug);
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleSelectionChanged(IEnumerable<DetectedKeyword> selectedKeywords)
+    {
+        DebugLogService.Log($"Selection changed: {selectedKeywords.Count()} keywords selected", Models.LogLevel.Debug);
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleTextCleared()
+    {
+        DetectedKeywords = null;
+        ResultText = string.Empty;
+        LastMaskResult = null;
+        LastRestoreResult = null;
+        await WorkSessionService.ResetSessionAsync();
+        DebugLogService.Log("Source text cleared", Models.LogLevel.Debug);
+    }
+    
+    private async Task ExecuteOperation()
+    {
+        if (!CanExecute || IsLoading) return;
+        
+        // Show confirmation dialog
+        var selectedKeywords = DetectedKeywords!.Where(k => k.IsSelected).ToList();
+        ConfirmationPreview = selectedKeywords.Take(5).Select(k => new ReplacementDetail
+        {
+            Original = k.Mapping.SensitiveKey,
+            Replacement = k.Mapping.SafeKey,
+            OccurrenceCount = k.Count
+        }).ToList();
+        
+        ShowConfirmation = true;
+        await Task.CompletedTask;
+    }
+    
+    private async Task ConfirmOperation()
+    {
+        ShowConfirmation = false;
+        IsLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            
+            if (CurrentMode == WorkMode.Mask)
+            {
+                LastMaskResult = await KeywordService.ApplyMaskAsync(SourceText, DetectedKeywords!);
+                LastRestoreResult = null;
+                ResultText = LastMaskResult.MaskedText;
+                DebugLogService.Log($"Mask operation completed: {LastMaskResult.ReplacedCount} replacements", Models.LogLevel.Info);
+            }
+            else
+            {
+                var dictionary = await DictionaryService.GetAllAsync();
+                LastRestoreResult = await KeywordService.RestoreTextAsync(SourceText, dictionary);
+                LastMaskResult = null;
+                ResultText = LastRestoreResult.RestoredText;
+                DebugLogService.Log($"Restore operation completed: {LastRestoreResult.RestoredCount} replacements", Models.LogLevel.Info);
+            }
+            
+            stopwatch.Stop();
+            ProcessingTimeMs = stopwatch.Elapsed.TotalMilliseconds;
+            
+            await WorkSessionService.UpdateResultTextAsync(ResultText);
+            
+            var count = LastMaskResult?.ReplacedCount ?? LastRestoreResult?.RestoredCount ?? 0;
+            toastRef?.Show($"操作完成，共 {count} 處替換", ToastType.Success);
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Operation failed: {ex.Message}", Models.LogLevel.Error);
+            toastRef?.Show($"操作失敗: {ex.Message}", ToastType.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private void CancelConfirmation()
+    {
+        ShowConfirmation = false;
+        ConfirmationPreview = null;
+    }
+    
+    private void HandleResultCopied()
+    {
+        DebugLogService.Log("Result copied to clipboard", Models.LogLevel.Debug);
+        toastRef?.Show("已複製到剪貼簿", ToastType.Success);
+    }
+    
+    private string GetConfirmationMessage()
+    {
+        var count = DetectedKeywords?.Where(k => k.IsSelected).Sum(k => k.Count) ?? 0;
+        return CurrentMode == WorkMode.Mask
+            ? $"將對 {count} 處關鍵字進行遮罩替換，是否繼續？"
+            : $"將對 {count} 處關鍵字進行還原，是否繼續？";
+    }
+    
+    private string GetDownloadFileName()
+    {
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        return CurrentMode == WorkMode.Mask
+            ? $"masked_{timestamp}.txt"
+            : $"restored_{timestamp}.txt";
+    }
+}

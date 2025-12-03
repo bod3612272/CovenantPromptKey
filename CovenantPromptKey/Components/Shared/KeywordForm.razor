@@ -1,0 +1,210 @@
+@namespace CovenantPromptKey.Components.Shared
+
+@using CovenantPromptKey.Models
+@using CovenantPromptKey.Models.Results
+@using CovenantPromptKey.Constants
+@using CovenantPromptKey.Services.Interfaces
+
+@inject IKeywordValidationService ValidationService
+@inject IDictionaryService DictionaryService
+
+<div class="keyword-form">
+    <h4 class="keyword-form__title">
+        @(Mode == FormMode.Add ? "新增關鍵字" : "編輯關鍵字")
+    </h4>
+    
+    <EditForm Model="@_formModel" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        
+        <div class="keyword-form__field">
+            <label for="sensitiveKey">敏感關鍵字 (SensitiveKey)</label>
+            <InputText id="sensitiveKey" 
+                       @bind-Value="_formModel.SensitiveKey" 
+                       class="keyword-form__input"
+                       placeholder="輸入要遮罩的敏感字詞..." />
+            <ValidationMessage For="@(() => _formModel.SensitiveKey)" />
+            @if (!string.IsNullOrEmpty(_sensitiveKeyError))
+            {
+                <span class="keyword-form__error">@_sensitiveKeyError</span>
+            }
+        </div>
+        
+        <div class="keyword-form__field">
+            <label for="safeKey">安全替換值 (SafeKey)</label>
+            <InputText id="safeKey" 
+                       @bind-Value="_formModel.SafeKey" 
+                       class="keyword-form__input"
+                       placeholder="輸入替換後的安全代碼..." />
+            <ValidationMessage For="@(() => _formModel.SafeKey)" />
+            @if (!string.IsNullOrEmpty(_safeKeyError))
+            {
+                <span class="keyword-form__error">@_safeKeyError</span>
+            }
+        </div>
+        
+        <div class="keyword-form__field">
+            <ColorPicker Label="高亮顏色"
+                         SelectedColor="@_formModel.HighlightColor"
+                         OnColorSelected="HandleColorSelected" />
+        </div>
+        
+        <div class="keyword-form__actions">
+            <button type="submit" 
+                    class="keyword-form__btn keyword-form__btn--primary"
+                    disabled="@_isSubmitting">
+                @if (_isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span>處理中...</span>
+                }
+                else
+                {
+                    <span>@(Mode == FormMode.Add ? "新增" : "儲存")</span>
+                }
+            </button>
+            <button type="button" 
+                    class="keyword-form__btn keyword-form__btn--secondary"
+                    @onclick="HandleCancel"
+                    disabled="@_isSubmitting">
+                取消
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    /// <summary>
+    /// 編輯模式下的現有映射
+    /// </summary>
+    [Parameter]
+    public KeywordMapping? Mapping { get; set; }
+
+    /// <summary>
+    /// 表單模式 (新增/編輯)
+    /// </summary>
+    [Parameter]
+    public FormMode Mode { get; set; } = FormMode.Add;
+
+    /// <summary>
+    /// 儲存成功時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback<KeywordMapping> OnSave { get; set; }
+
+    /// <summary>
+    /// 取消時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private KeywordFormModel _formModel = new();
+    private string _sensitiveKeyError = string.Empty;
+    private string _safeKeyError = string.Empty;
+    private bool _isSubmitting = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Mapping is not null && Mode == FormMode.Edit)
+        {
+            _formModel = new KeywordFormModel
+            {
+                Id = Mapping.Id,
+                SensitiveKey = Mapping.SensitiveKey,
+                SafeKey = Mapping.SafeKey,
+                HighlightColor = Mapping.HighlightColor
+            };
+        }
+        else if (Mode == FormMode.Add)
+        {
+            _formModel = new KeywordFormModel
+            {
+                HighlightColor = AppConstants.DefaultColors[0]
+            };
+        }
+        
+        ClearErrors();
+    }
+
+    private void HandleColorSelected(string color)
+    {
+        _formModel.HighlightColor = color;
+    }
+
+    private async Task HandleSubmit()
+    {
+        ClearErrors();
+        _isSubmitting = true;
+
+        try
+        {
+            var mapping = new KeywordMapping
+            {
+                Id = _formModel.Id,
+                SensitiveKey = _formModel.SensitiveKey.Trim(),
+                SafeKey = _formModel.SafeKey.Trim(),
+                HighlightColor = _formModel.HighlightColor
+            };
+
+            // Get existing mappings for validation (excluding current one in edit mode)
+            var allMappings = await DictionaryService.GetAllAsync();
+            var existingMappings = Mode == FormMode.Edit 
+                ? allMappings.Where(m => m.Id != mapping.Id).ToList()
+                : allMappings.ToList();
+
+            // Validate with service
+            var validationResult = ValidationService.Validate(mapping, existingMappings);
+
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                {
+                    if (error.Contains("SensitiveKey", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _sensitiveKeyError = error;
+                    }
+                    else if (error.Contains("SafeKey", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _safeKeyError = error;
+                    }
+                    else
+                    {
+                        // General error - show on both fields
+                        _sensitiveKeyError = error;
+                    }
+                }
+                return;
+            }
+
+            await OnSave.InvokeAsync(mapping);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private void ClearErrors()
+    {
+        _sensitiveKeyError = string.Empty;
+        _safeKeyError = string.Empty;
+    }
+
+    /// <summary>
+    /// 表單模型
+    /// </summary>
+    private class KeywordFormModel
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        
+        public string SensitiveKey { get; set; } = string.Empty;
+        
+        public string SafeKey { get; set; } = string.Empty;
+        
+        public string HighlightColor { get; set; } = AppConstants.DefaultColors[0];
+    }
+}

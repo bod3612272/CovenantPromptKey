@@ -1,0 +1,296 @@
+@* SourceTextEditor.razor - 原文輸入區組件 *@
+@* Text input area with keyword highlighting and line numbers *@
+
+@inject IJSRuntime JS
+
+<div class="source-text-editor @(IsEditable ? "editable" : "readonly")" id="@_containerId">
+    <div class="editor-toolbar">
+        <span class="editor-label">@Label</span>
+        @if (ShowCharacterCount)
+        {
+            <span class="character-count @(IsOverLimit ? "over-limit" : "")">
+                @CharacterCount / @MaxLength 字元
+            </span>
+        }
+        @if (ShowClearButton && IsEditable && !string.IsNullOrEmpty(Text))
+        {
+            <button class="btn btn-sm btn-outline-secondary clear-btn" 
+                    @onclick="HandleClear" 
+                    title="清除文字">
+                <i class="bi bi-x-lg"></i> 清除
+            </button>
+        }
+    </div>
+    
+    <div class="editor-container">
+        @if (ShowLineNumbers)
+        {
+            <div class="line-numbers" id="@_lineNumbersId" @ref="lineNumbersRef">
+                @for (int i = 1; i <= LineCount; i++)
+                {
+                    var lineNum = i;
+                    <div class="line-number @(_highlightedLine == lineNum ? "highlighted" : "")" 
+                         @onclick="() => HandleLineClick(lineNum)"
+                         data-line="@lineNum">
+                        @lineNum
+                    </div>
+                }
+            </div>
+        }
+        
+        <div class="text-area-wrapper">
+            @if (IsEditable)
+            {
+                <textarea class="text-input" 
+                          id="@_textAreaId"
+                          @ref="textAreaRef"
+                          @bind="InternalText"
+                          @bind:event="oninput"
+                          @onscroll="HandleScroll"
+                          placeholder="@Placeholder"
+                          disabled="@IsDisabled"
+                          spellcheck="false"></textarea>
+            }
+            else
+            {
+                <div class="text-display" 
+                     id="@_textDisplayId"
+                     @ref="textDisplayRef"
+                     @onscroll="HandleScroll">
+                    @if (DetectedKeywords != null && DetectedKeywords.Any())
+                    {
+                        @RenderHighlightedText()
+                    }
+                    else
+                    {
+                        <pre class="plain-text">@Text</pre>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="editor-error">
+            <i class="bi bi-exclamation-triangle"></i> @ErrorMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
+    
+    [Parameter]
+    public EventCallback<string> TextChanged { get; set; }
+    
+    [Parameter]
+    public string Label { get; set; } = "原文";
+    
+    [Parameter]
+    public string Placeholder { get; set; } = "請輸入或貼上需要處理的文字...";
+    
+    [Parameter]
+    public bool IsEditable { get; set; } = true;
+    
+    [Parameter]
+    public bool IsDisabled { get; set; } = false;
+    
+    [Parameter]
+    public bool ShowLineNumbers { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowCharacterCount { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowClearButton { get; set; } = true;
+    
+    [Parameter]
+    public int MaxLength { get; set; } = 100_000;
+    
+    [Parameter]
+    public IEnumerable<DetectedKeyword>? DetectedKeywords { get; set; }
+    
+    [Parameter]
+    public EventCallback<DetectedKeyword> OnKeywordClicked { get; set; }
+    
+    [Parameter]
+    public EventCallback OnTextCleared { get; set; }
+    
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+    
+    [Parameter]
+    public EventCallback<int> OnLineClicked { get; set; }
+    
+    private ElementReference textAreaRef;
+    private ElementReference textDisplayRef;
+    private ElementReference lineNumbersRef;
+    
+    private readonly string _containerId = $"editor-{Guid.NewGuid():N}";
+    private readonly string _lineNumbersId = $"linenums-{Guid.NewGuid():N}";
+    private readonly string _textAreaId = $"textarea-{Guid.NewGuid():N}";
+    private readonly string _textDisplayId = $"textdisplay-{Guid.NewGuid():N}";
+    
+    private int? _highlightedLine = null;
+    
+    private string InternalText
+    {
+        get => Text;
+        set
+        {
+            if (Text != value)
+            {
+                Text = value;
+                TextChanged.InvokeAsync(value);
+            }
+        }
+    }
+    
+    private int CharacterCount => Text?.Length ?? 0;
+    private bool IsOverLimit => CharacterCount > MaxLength;
+    private int LineCount => string.IsNullOrEmpty(Text) ? 1 : Text.Split('\n').Length;
+    
+    private async Task HandleClear()
+    {
+        InternalText = string.Empty;
+        await OnTextCleared.InvokeAsync();
+    }
+    
+    private async Task HandleScroll()
+    {
+        // Sync scroll position between textarea and line numbers
+        // This would require JS interop for precise synchronization
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleKeywordClick(DetectedKeyword keyword)
+    {
+        if (OnKeywordClicked.HasDelegate)
+        {
+            await OnKeywordClicked.InvokeAsync(keyword);
+        }
+    }
+    
+    private RenderFragment RenderHighlightedText() => builder =>
+    {
+        if (string.IsNullOrEmpty(Text) || DetectedKeywords == null || !DetectedKeywords.Any())
+        {
+            builder.OpenElement(0, "pre");
+            builder.AddAttribute(1, "class", "plain-text");
+            builder.AddContent(2, Text);
+            builder.CloseElement();
+            return;
+        }
+        
+        // Get all occurrences sorted by position
+        var allOccurrences = DetectedKeywords
+            .Where(dk => dk.Occurrences != null)
+            .SelectMany(dk => dk.Occurrences!.Select(occ => new {
+                Keyword = dk,
+                Occurrence = occ
+            }))
+            .OrderBy(x => x.Occurrence.StartIndex)
+            .ToList();
+        
+        builder.OpenElement(0, "pre");
+        builder.AddAttribute(1, "class", "highlighted-text");
+        
+        int currentIndex = 0;
+        int seq = 2;
+        
+        foreach (var item in allOccurrences)
+        {
+            var occ = item.Occurrence;
+            var keyword = item.Keyword;
+            
+            // Skip overlapping occurrences
+            if (occ.StartIndex < currentIndex)
+                continue;
+            
+            // Add text before this occurrence
+            if (occ.StartIndex > currentIndex)
+            {
+                var beforeText = Text.Substring(currentIndex, occ.StartIndex - currentIndex);
+                builder.AddContent(seq++, beforeText);
+            }
+            
+            // Add highlighted keyword
+            var warningClass = occ.HasContextWarning ? "has-warning" : "";
+            builder.OpenElement(seq++, "span");
+            builder.AddAttribute(seq++, "class", $"keyword-highlight {(keyword.IsSelected ? "selected" : "")} {warningClass}");
+            builder.AddAttribute(seq++, "style", $"--keyword-color: {keyword.Mapping.HighlightColor ?? "#ffc107"}");
+            
+            var tooltip = occ.HasContextWarning 
+                ? $"⚠️ {keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey} (注意：緊鄰中文字元)"
+                : $"{keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey}";
+            builder.AddAttribute(seq++, "title", tooltip);
+            
+            // Add click handler if delegate exists
+            if (OnKeywordClicked.HasDelegate)
+            {
+                var capturedKeyword = keyword;
+                builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create(this, () => HandleKeywordClick(capturedKeyword)));
+                builder.AddAttribute(seq++, "role", "button");
+            }
+            
+            builder.AddContent(seq++, occ.OriginalText);
+            builder.CloseElement();
+            
+            currentIndex = occ.EndIndex;
+        }
+        
+        // Add remaining text
+        if (currentIndex < Text.Length)
+        {
+            builder.AddContent(seq++, Text.Substring(currentIndex));
+        }
+        
+        builder.CloseElement();
+    };
+    
+    /// <summary>
+    /// Scroll to a specific line number (1-based)
+    /// </summary>
+    public async Task ScrollToLineAsync(int lineNumber)
+    {
+        if (lineNumber < 1 || lineNumber > LineCount)
+            return;
+            
+        _highlightedLine = lineNumber;
+        StateHasChanged();
+        
+        var targetId = IsEditable ? _textAreaId : _textDisplayId;
+        await JS.InvokeVoidAsync("CovenantPromptKey.scrollToLine", targetId, lineNumber, _lineNumbersId);
+        
+        // Clear highlight after animation
+        _ = Task.Delay(2000).ContinueWith(async _ =>
+        {
+            _highlightedLine = null;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+    
+    private async Task HandleLineClick(int lineNumber)
+    {
+        await ScrollToLineAsync(lineNumber);
+        
+        if (OnLineClicked.HasDelegate)
+        {
+            await OnLineClicked.InvokeAsync(lineNumber);
+        }
+    }
+    
+    /// <summary>
+    /// Get the line number for a given character index
+    /// </summary>
+    public int GetLineNumberForIndex(int charIndex)
+    {
+        if (string.IsNullOrEmpty(Text) || charIndex < 0)
+            return 1;
+            
+        var textUpToIndex = Text[..Math.Min(charIndex, Text.Length)];
+        return textUpToIndex.Count(c => c == '\n') + 1;
+    }
+}

@@ -7,4 +7,9 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
+  </ItemGroup>
+
 </Project>
