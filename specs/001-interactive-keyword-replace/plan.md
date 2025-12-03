@@ -149,7 +149,7 @@ CovenantPromptKey/
 │       └── bootstrap/            # Bootstrap 5
 │
 └── Properties/
-    └── launchSettings.json
+    └── launchSettings.json       # Auto port selection (FR-030) & browser launch (FR-031)
 ```
 
 **Structure Decision**: 採用 Single Project 結構，因為此為純前端 Blazor Server 應用程式，所有業務邏輯與 UI 均在同一專案內。Models/Services/Components 分層清晰，符合關注點分離原則。

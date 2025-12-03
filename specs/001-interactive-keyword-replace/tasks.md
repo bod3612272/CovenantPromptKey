@@ -25,6 +25,7 @@
 **Purpose**: Project initialization, dependencies, and basic structure
 
 - [ ] T001 Install required NuGet packages (CsvHelper, Markdig) via `dotnet add package`
+- [ ] T001a [P] Configure auto port selection and browser launch in `CovenantPromptKey/Properties/launchSettings.json` (FR-030, FR-031)
 - [ ] T002 [P] Create constants file in `CovenantPromptKey/Constants/AppConstants.cs`
 - [ ] T003 [P] Create reserved keywords file in `CovenantPromptKey/Constants/ReservedKeywords.cs`
 - [ ] T004 Create test project `CovenantPromptKey.Tests/CovenantPromptKey.Tests.csproj` with xUnit
