@@ -19,7 +19,7 @@
 - Bootstrap 5 (UI 框架)
 
 **Storage**: Browser localStorage (字典持久化) + sessionStorage (工作階段狀態)  
-**Testing**: xUnit + bUnit (Blazor 元件測試)  
+**Testing**: xUnit + TDD (Red-Green-Refactor)；後端核心服務單元測試覆蓋率 ≥ 50%；前端 UI 採手動驗證  
 **Target Platform**: Windows (Chromium-based browsers: Chrome, Edge)  
 **Project Type**: Web Application (Single Project - Blazor Server)  
 **Performance Goals**: 

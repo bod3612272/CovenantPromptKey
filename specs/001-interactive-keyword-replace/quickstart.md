@@ -131,12 +131,26 @@ builder.Services.AddTransient<IKeywordValidationService, KeywordValidationServic
 3. 功能元件 (`SourceTextEditor`, `KeywordControlPanel`, `ResultViewer`)
 4. 頁面元件 (`MaskRestorePage`, `SettingsPage`, `DebugLogPage`)
 
-### 步驟 4: 整合測試
+### 步驟 4: TDD 開發與手動驗證
 
-使用 bUnit 撰寫元件測試，驗證：
-- 關鍵字偵測正確性
-- UI 互動行為
-- 狀態管理正確性
+**後端核心服務** - 採用 TDD (Red-Green-Refactor) 流程：
+1. **Red**: 先撰寫失敗的測試案例
+2. **Green**: 實作最小可行程式碼使測試通過
+3. **Refactor**: 重構程式碼，確保測試仍通過
+
+**測試覆蓋率目標**: 核心服務 ≥ 50%
+
+應測試的核心服務：
+- `IKeywordService` - 關鍵字偵測演算法正確性
+- `IKeywordValidationService` - 字典驗證邏輯
+- `ICsvService` - CSV 匯入/匯出解析
+- `IMarkdownService` - Markdown 結構解析
+- `IDictionaryService` - 字典 CRUD 操作
+
+**前端 UI** - 採手動驗證（不計入覆蓋率）：
+- 三欄式佈局顯示
+- 勾選/取消勾選互動
+- 捲動與高亮行為
 
 ---
 

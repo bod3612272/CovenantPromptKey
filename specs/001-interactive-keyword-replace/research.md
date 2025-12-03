@@ -231,6 +231,69 @@ public interface IDebugLogService
 |---------|------|------|
 | CsvHelper | 最新穩定版 | CSV 匯入/匯出 |
 | Markdig | 最新穩定版 | Markdown 解析 |
+| coverlet.collector | 最新穩定版 | 程式碼覆蓋率收集 |
+| xunit | 最新穩定版 | 單元測試框架 |
+| xunit.runner.visualstudio | 最新穩定版 | VS Test Runner 整合 |
+
+---
+
+## TDD 開發流程 (Test-Driven Development)
+
+### 開發方法論
+
+後端核心服務採用 **TDD (Red-Green-Refactor)** 流程：
+
+1. **Red (紅燈)**: 先撰寫失敗的測試案例，定義預期行為
+2. **Green (綠燈)**: 實作最小可行程式碼使測試通過
+3. **Refactor (重構)**: 優化程式碼結構，確保測試仍通過
+
+### 測試覆蓋率目標
+
+| 服務層級 | 覆蓋率目標 | 備註 |
+|---------|-----------|------|
+| 核心服務 (Services/) | ≥ 50% | 必須達成 |
+| 前端 UI (Components/) | N/A | 手動驗證，不計入覆蓋率 |
+
+### 需 TDD 開發的核心服務
+
+| 服務 | 測試重點 |
+|------|---------|
+| `KeywordService` | 偵測演算法、最長匹配、語境警示 |
+| `KeywordValidationService` | 保留字檢查、SafeKey 唯一性、長度限制 |
+| `CsvService` | 匯入解析、匯出格式、錯誤處理 |
+| `MarkdownService` | URL 保護區、程式碼區塊識別 |
+| `DictionaryService` | CRUD 操作、數量限制、事件觸發 |
+| `DebugLogService` | 環形緩衝區、最大行數限制 |
+
+### 測試專案結構
+
+```text
+CovenantPromptKey.Tests/
+├── CovenantPromptKey.Tests.csproj
+├── Services/
+│   ├── KeywordServiceTests.cs
+│   ├── KeywordValidationServiceTests.cs
+│   ├── CsvServiceTests.cs
+│   ├── MarkdownServiceTests.cs
+│   ├── DictionaryServiceTests.cs
+│   └── DebugLogServiceTests.cs
+├── TestData/
+│   ├── valid-keywords.csv
+│   ├── invalid-keywords.csv
+│   └── sample-markdown.md
+└── Helpers/
+    └── TestFixtures.cs
+```
+
+### 覆蓋率檢查指令
+
+```powershell
+# 執行測試並產生覆蓋率報告
+dotnet test --collect:"XPlat Code Coverage"
+
+# 產生 HTML 報告 (需安裝 reportgenerator)
+reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+```
 
 ---
 
