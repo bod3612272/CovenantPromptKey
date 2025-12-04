@@ -1,0 +1,186 @@
+@page "/settings"
+
+@namespace CovenantPromptKey.Components.Pages
+
+@using CovenantPromptKey.Components.Shared
+@using CovenantPromptKey.Models
+@using CovenantPromptKey.Models.Results
+@using CovenantPromptKey.Services.Interfaces
+
+@inject IDictionaryService DictionaryService
+@inject IDebugLogService LogService
+
+@rendermode InteractiveServer
+
+<PageTitle>設定 - CovenantPromptKey</PageTitle>
+
+<div class="settings-page">
+    <header class="settings-page__header">
+        <h1 class="settings-page__title">關鍵字字典管理</h1>
+        <p class="settings-page__subtitle">
+            管理敏感關鍵字與安全替換值的映射關係
+        </p>
+    </header>
+    
+    <div class="settings-page__content">
+        <div class="settings-page__main">
+            <div class="settings-page__actions">
+                <button class="settings-page__btn settings-page__btn--primary"
+                        @onclick="ShowAddForm">
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    <span>新增關鍵字</span>
+                </button>
+            </div>
+            
+            <KeywordList OnEdit="HandleEditKeyword" 
+                         OnDelete="HandleDeleteKeyword" />
+        </div>
+        
+        <aside class="settings-page__sidebar">
+            @if (_showForm)
+            {
+                <KeywordForm Mode="@_formMode"
+                             Mapping="@_editingMapping"
+                             OnSave="HandleSaveKeyword"
+                             OnCancel="HideForm" />
+            }
+            else
+            {
+                <CsvImportExport OnImportComplete="HandleImportComplete" />
+            }
+        </aside>
+    </div>
+</div>
+
+<ConfirmationDialog Title="確認刪除"
+                    Message="@_deleteConfirmMessage"
+                    IsVisible="@_showDeleteConfirm"
+                    OnConfirm="ConfirmDelete"
+                    OnCancel="CancelDelete" />
+
+<ToastNotification @ref="_toast" />
+
+@code {
+    private bool _showForm = false;
+    private FormMode _formMode = FormMode.Add;
+    private KeywordMapping? _editingMapping;
+    
+    private bool _showDeleteConfirm = false;
+    private KeywordMapping? _deletingMapping;
+    private string _deleteConfirmMessage = string.Empty;
+    
+    private ToastNotification? _toast;
+
+    private void ShowAddForm()
+    {
+        _formMode = FormMode.Add;
+        _editingMapping = null;
+        _showForm = true;
+    }
+
+    private void HideForm()
+    {
+        _showForm = false;
+        _editingMapping = null;
+    }
+
+    private void HandleEditKeyword(KeywordMapping mapping)
+    {
+        _formMode = FormMode.Edit;
+        _editingMapping = mapping;
+        _showForm = true;
+    }
+
+    private void HandleDeleteKeyword(KeywordMapping mapping)
+    {
+        _deletingMapping = mapping;
+        _deleteConfirmMessage = $"確定要刪除關鍵字「{mapping.SensitiveKey}」→「{mapping.SafeKey}」嗎？此操作無法復原。";
+        _showDeleteConfirm = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_deletingMapping is not null)
+        {
+            var result = await DictionaryService.DeleteAsync(_deletingMapping.Id);
+            if (result)
+            {
+                LogService.Log($"已刪除關鍵字映射: {_deletingMapping.SensitiveKey}", LogLevel.Info);
+                await ShowToast("已成功刪除關鍵字", ToastType.Success);
+            }
+            else
+            {
+                LogService.Log($"刪除關鍵字映射失敗: {_deletingMapping.SensitiveKey}", LogLevel.Error);
+                await ShowToast("刪除失敗", ToastType.Error);
+            }
+        }
+        
+        _showDeleteConfirm = false;
+        _deletingMapping = null;
+    }
+
+    private void CancelDelete()
+    {
+        _showDeleteConfirm = false;
+        _deletingMapping = null;
+    }
+
+    private async Task HandleSaveKeyword(KeywordMapping mapping)
+    {
+        if (_formMode == FormMode.Add)
+        {
+            var result = await DictionaryService.AddAsync(mapping);
+            if (result.IsSuccess)
+            {
+                LogService.Log($"已新增關鍵字映射: {mapping.SensitiveKey}", LogLevel.Info);
+                await ShowToast("已成功新增關鍵字", ToastType.Success);
+                HideForm();
+            }
+            else
+            {
+                LogService.Log($"新增關鍵字映射失敗: {result.ErrorMessage}", LogLevel.Error);
+                await ShowToast($"新增失敗: {result.ErrorMessage}", ToastType.Error);
+            }
+        }
+        else
+        {
+            var result = await DictionaryService.UpdateAsync(mapping);
+            if (result.IsSuccess)
+            {
+                LogService.Log($"已更新關鍵字映射: {mapping.SensitiveKey}", LogLevel.Info);
+                await ShowToast("已成功更新關鍵字", ToastType.Success);
+                HideForm();
+            }
+            else
+            {
+                LogService.Log($"更新關鍵字映射失敗: {result.ErrorMessage}", LogLevel.Error);
+                await ShowToast($"更新失敗: {result.ErrorMessage}", ToastType.Error);
+            }
+        }
+    }
+
+    private async Task HandleImportComplete(CsvImportResult result)
+    {
+        if (result.IsSuccess)
+        {
+            LogService.Log($"CSV 匯入完成: {result.ImportedCount} 成功, {result.SkippedCount} 跳過", LogLevel.Info);
+            await ShowToast($"已匯入 {result.ImportedCount} 筆關鍵字", ToastType.Success);
+        }
+        else
+        {
+            LogService.Log($"CSV 匯入失敗: {result.Errors.Count} 個錯誤", LogLevel.Error);
+            await ShowToast("匯入過程中發生錯誤", ToastType.Error);
+        }
+    }
+
+    private async Task ShowToast(string message, ToastType type)
+    {
+        if (_toast is not null)
+        {
+            _toast.Show(message, type);
+        }
+        await Task.CompletedTask;
+    }
+}

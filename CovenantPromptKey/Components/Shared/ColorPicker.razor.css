@@ -1,0 +1,52 @@
+.color-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.color-picker__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary, #333);
+}
+
+.color-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+
+.color-picker__swatch {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.color-picker__swatch:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-picker__swatch:focus {
+    outline: 2px solid var(--primary-color, #0d6efd);
+    outline-offset: 2px;
+}
+
+.color-picker__swatch--selected {
+    border-color: var(--primary-color, #0d6efd);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.color-picker__check {
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
