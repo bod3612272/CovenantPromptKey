@@ -19,6 +19,9 @@
     
     <!-- 進階優化選項 -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    
+    <!-- 停用 StaticWebAssets manifest 以支援單一檔案發布 -->
+    <GenerateStaticWebAssetsManifest>false</GenerateStaticWebAssetsManifest>
   </PropertyGroup>
 
   <ItemGroup>

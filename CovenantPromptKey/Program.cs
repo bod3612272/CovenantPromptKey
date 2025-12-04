@@ -50,7 +50,9 @@ namespace CovenantPromptKey
             app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseAntiforgery();
 
-            app.MapStaticAssets();
+            // 使用 UseStaticFiles 以支援單一檔案發布
+            // MapStaticAssets() 在單一檔案模式下無法找到 manifest 檔案
+            app.UseStaticFiles();
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 
