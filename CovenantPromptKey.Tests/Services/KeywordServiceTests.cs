@@ -282,6 +282,111 @@ public class KeywordServiceTests
         Assert.False(result[0].Occurrences[1].IsInCodeBlock);
     }
 
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_SkipsEmbeddedInEnglishWord()
+    {
+        // Arrange - Per spec.md line 114: "AI" should not match within "train"
+        const string text = "This is a train.";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "AI", SafeKey = "T-AI" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - "ai" in "train" should NOT be detected
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_DetectsStandaloneEnglishKeyword()
+    {
+        // Arrange - Standalone "AI" should be detected
+        const string text = "AI is great. Use AI today.";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "AI", SafeKey = "T-AI" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - Both standalone "AI" should be detected
+        Assert.Single(result);
+        Assert.Equal(2, result[0].Count);
+    }
+
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_SkipsKeywordEmbeddedAtStart()
+    {
+        // Arrange - "aaaa" should not match inside "sdfboofsss" or any continuous letters
+        const string text = "Random text like sdfaaaasss should not match.";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "aaaa", SafeKey = "T-aaaa" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - Should NOT detect "aaaa" embedded in "sdfaaaasss"
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_DetectsKeywordWithPunctuation()
+    {
+        // Arrange - Keyword followed by punctuation is valid
+        const string text = "Hello AI, how are you?";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "AI", SafeKey = "T-AI" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - "AI" followed by comma should be detected
+        Assert.Single(result);
+        Assert.Single(result[0].Occurrences);
+    }
+
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_ChineseKeywordNotAffected()
+    {
+        // Arrange - Chinese keywords should NOT be affected by word boundary rules
+        const string text = "This train contains 武科電 company.";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "武科電", SafeKey = "T-Company" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - Chinese keyword should be detected normally
+        Assert.Single(result);
+        Assert.Single(result[0].Occurrences);
+    }
+
+    [Fact]
+    public async Task DetectKeywordsAsync_WordBoundary_MixedKeywordNotAffected()
+    {
+        // Arrange - Mixed (non-pure-English) keywords should NOT be affected
+        const string text = "Use Company1 for the project.";
+        var dictionary = new List<KeywordMapping>
+        {
+            new() { SensitiveKey = "Company1", SafeKey = "T-Company" }
+        };
+
+        // Act
+        var result = await _service.DetectKeywordsAsync(text, dictionary);
+
+        // Assert - Mixed keyword should be detected even if adjacent to letters
+        Assert.Single(result);
+    }
+
     #endregion
 
     #region ApplyMaskAsync Tests

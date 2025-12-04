@@ -65,6 +65,37 @@ window.CovenantPromptKey = {
     },
 
     /**
+     * Sync scroll position between textarea, highlight backdrop and line numbers
+     * @param {string} textAreaId - Textarea element ID
+     * @param {string} highlightBackdropId - Highlight backdrop element ID
+     * @param {string} lineNumbersId - Line numbers container ID
+     */
+    syncEditorScroll: function (textAreaId, highlightBackdropId, lineNumbersId) {
+        const textArea = document.getElementById(textAreaId);
+        if (!textArea) return;
+
+        const scrollTop = textArea.scrollTop;
+        const scrollLeft = textArea.scrollLeft;
+
+        // Sync highlight backdrop
+        if (highlightBackdropId) {
+            const backdrop = document.getElementById(highlightBackdropId);
+            if (backdrop) {
+                backdrop.scrollTop = scrollTop;
+                backdrop.scrollLeft = scrollLeft;
+            }
+        }
+
+        // Sync line numbers
+        if (lineNumbersId) {
+            const lineNumbers = document.getElementById(lineNumbersId);
+            if (lineNumbers) {
+                lineNumbers.scrollTop = scrollTop;
+            }
+        }
+    },
+
+    /**
      * Scroll element to specific line (1-based) with sync to line numbers
      * @param {string} elementId - Text area or display element ID
      * @param {number} lineNumber - Line number (1-based)
@@ -116,6 +147,30 @@ window.CovenantPromptKey = {
                 block: 'center'
             });
         }
+    },
+
+    /**
+     * Scroll to a specific element and flash highlight it
+     * @param {string} elementId - Element ID to scroll to
+     */
+    scrollToElement: function (elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            console.warn('Element not found:', elementId);
+            return;
+        }
+
+        // Scroll the element into view
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+        
+        // Add flash highlight effect
+        element.classList.add('flash-highlight');
+        setTimeout(() => {
+            element.classList.remove('flash-highlight');
+        }, 2000);
     },
 
     /**

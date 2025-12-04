@@ -120,7 +120,9 @@ public class DictionaryService : IDictionaryService
     {
         await EnsureInitializedAsync();
 
-        var mapping = _cache!.FirstOrDefault(m => m.Id == id);
+        if (_cache == null) return false;
+        
+        var mapping = _cache.FirstOrDefault(m => m.Id == id);
         if (mapping == null)
         {
             _logService.Log($"刪除失敗: 找不到 ID 為 {id} 的關鍵字映射", Models.LogLevel.Warning);
@@ -140,12 +142,18 @@ public class DictionaryService : IDictionaryService
     {
         await EnsureInitializedAsync();
 
-        var count = _cache!.Count;
+        if (_cache == null) return;
+        
+        var count = _cache.Count;
         _cache.Clear();
         
         try
         {
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", AppConstants.StorageKeys.KeywordDictionary);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop，靜默忽略
         }
         catch (Exception ex)
         {
@@ -192,6 +200,13 @@ public class DictionaryService : IDictionaryService
 
             _isInitialized = true;
             _logService.Log($"字典服務初始化完成，載入 {_cache.Count} 筆關鍵字", Models.LogLevel.Debug);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop，使用空快取
+            _cache ??= new List<KeywordMapping>();
+            // 不設定 _isInitialized = true，讓下次呼叫時重試
+            _logService.Log("在預渲染階段無法載入字典，將在客戶端渲染後重試", Models.LogLevel.Debug);
         }
         catch (Exception ex)
         {

@@ -76,6 +76,13 @@ public partial class KeywordService : IKeywordService
                     continue;
                 }
 
+                // Check if pure-English keyword is embedded within a continuous English word
+                // Per spec.md line 114: "AI" should not match within "train"
+                if (IsEmbeddedInEnglishWord(text, match.StartIndex, match.EndIndex, mapping.SensitiveKey))
+                {
+                    continue;
+                }
+
                 // Check if in code block (for whole-word matching later)
                 var isInCodeBlock = IsInProtectedRegion(match.StartIndex, match.EndIndex, mdStructure.CodeBlocks) ||
                                    IsInProtectedRegion(match.StartIndex, match.EndIndex, mdStructure.InlineCode);
@@ -83,14 +90,16 @@ public partial class KeywordService : IKeywordService
                 // Check for context warning (adjacent Chinese characters)
                 var hasContextWarning = HasAdjacentChineseCharacter(text, match.StartIndex, match.EndIndex);
 
-                // Calculate line number
+                // Calculate line number and column index
                 var lineNumber = GetLineNumber(lineStarts, match.StartIndex);
+                var columnIndex = GetColumnIndex(lineStarts, match.StartIndex, lineNumber);
 
                 occurrences.Add(new KeywordOccurrence
                 {
                     StartIndex = match.StartIndex,
                     EndIndex = match.EndIndex,
                     LineNumber = lineNumber,
+                    ColumnIndex = columnIndex,
                     OriginalText = match.OriginalText,
                     HasContextWarning = hasContextWarning,
                     IsInCodeBlock = isInCodeBlock,
@@ -293,6 +302,15 @@ public partial class KeywordService : IKeywordService
         return low + 1; // 1-based line number
     }
 
+    /// <summary>
+    /// 計算字元在行內的位置 (1-based)
+    /// </summary>
+    private static int GetColumnIndex(List<int> lineStarts, int position, int lineNumber)
+    {
+        var lineStart = lineStarts[lineNumber - 1]; // Convert to 0-based index
+        return position - lineStart + 1; // 1-based column index
+    }
+
     private static bool IsInProtectedRegion(int start, int end, List<TextRange> regions)
     {
         return regions.Any(r => start >= r.Start && end <= r.End);
@@ -314,6 +332,39 @@ public partial class KeywordService : IKeywordService
             var charAfter = text[end].ToString();
             if (ChineseCharRegex().IsMatch(charAfter))
                 return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 檢查純英文關鍵字是否匹配到連續英文單詞內部
+    /// 根據 spec.md 第 114 行規格：
+    /// "train" 中的 "ai" 不應被偵測為關鍵字
+    /// </summary>
+    /// <param name="text">原始文本</param>
+    /// <param name="start">匹配起始位置</param>
+    /// <param name="end">匹配結束位置</param>
+    /// <param name="keyword">關鍵字</param>
+    /// <returns>如果關鍵字被英文字母包圍則回傳 true (應跳過此匹配)</returns>
+    private static bool IsEmbeddedInEnglishWord(string text, int start, int end, string keyword)
+    {
+        // 只對純英文關鍵字進行 word boundary 檢查
+        if (!keyword.All(char.IsAsciiLetter))
+        {
+            return false;
+        }
+
+        // 檢查前一個字元是否為英文字母
+        if (start > 0 && char.IsAsciiLetter(text[start - 1]))
+        {
+            return true;
+        }
+
+        // 檢查後一個字元是否為英文字母
+        if (end < text.Length && char.IsAsciiLetter(text[end]))
+        {
+            return true;
         }
 
         return false;

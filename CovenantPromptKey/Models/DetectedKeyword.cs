@@ -37,6 +37,11 @@ public class DetectedKeyword
 public class KeywordOccurrence
 {
     /// <summary>
+    /// 唯一識別碼 (用於 UI 標記與選取)
+    /// </summary>
+    public string Id { get; init; } = Guid.NewGuid().ToString("N")[..8];
+
+    /// <summary>
     /// 在原文中的起始索引
     /// </summary>
     public int StartIndex { get; init; }
@@ -50,6 +55,11 @@ public class KeywordOccurrence
     /// 所在行號 (1-based)
     /// </summary>
     public int LineNumber { get; init; }
+
+    /// <summary>
+    /// 在行內的字元位置 (1-based)
+    /// </summary>
+    public int ColumnIndex { get; init; }
 
     /// <summary>
     /// 原文中的實際文字（保留大小寫）
@@ -70,4 +80,9 @@ public class KeywordOccurrence
     /// 是否選擇替換此出現（個別控制）
     /// </summary>
     public bool IsSelected { get; set; } = true;
+
+    /// <summary>
+    /// 取得位置顯示文字 (例如: "行1, 字5")
+    /// </summary>
+    public string PositionText => $"行{LineNumber}, 字{ColumnIndex}";
 }

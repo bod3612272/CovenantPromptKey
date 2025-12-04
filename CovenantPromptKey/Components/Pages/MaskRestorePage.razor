@@ -88,6 +88,8 @@
                 MaxLength="@AppConstants.MaxTextLength"
                 DetectedKeywords="@DetectedKeywords"
                 OnKeywordClicked="HandleKeywordClicked"
+                OnOccurrenceClicked="HandleOccurrenceClicked"
+                HighlightedOccurrenceId="@HighlightedOccurrenceId"
                 OnTextCleared="HandleTextCleared"
                 ErrorMessage="@SourceErrorMessage" />
         </SourceContent>
@@ -121,7 +123,11 @@
                     DetectedKeywords="@DetectedKeywords"
                     OnKeywordToggled="HandleKeywordToggled"
                     OnSelectionChanged="HandleSelectionChanged"
+                    OnOccurrenceClicked="HandleOccurrenceClickedFromPanel"
+                    OnOccurrenceToggled="HandleOccurrenceToggled"
+                    OnLineClicked="HandleLineClicked"
                     HighlightedKeyword="@HighlightedKeyword"
+                    HighlightedOccurrenceId="@HighlightedOccurrenceId"
                     IsDisabled="@IsLoading"
                     ShowSearch="true" />
             </div>
@@ -162,6 +168,7 @@
     private string ResultText { get; set; } = string.Empty;
     private string? SourceErrorMessage { get; set; }
     private string? HighlightedKeyword { get; set; }
+    private string? HighlightedOccurrenceId { get; set; }
     
     private List<DetectedKeyword>? DetectedKeywords { get; set; }
     private MaskResult? LastMaskResult { get; set; }
@@ -175,22 +182,39 @@
     private ToastNotification? toastRef;
     
     private int TotalOccurrences => DetectedKeywords?.Sum(k => k.Count) ?? 0;
-    private int SelectedOccurrences => DetectedKeywords?.Where(k => k.IsSelected).Sum(k => k.Count) ?? 0;
+    private int SelectedOccurrences => DetectedKeywords?.Sum(k => k.Occurrences?.Count(o => o.IsSelected) ?? 0) ?? 0;
     
     // 遮罩模式需要選擇關鍵字，還原模式只需要有文字和字典
     private bool CanExecute => !string.IsNullOrWhiteSpace(SourceText) && 
                                (CurrentMode == WorkMode.Restore 
                                    ? HasDictionary 
-                                   : DetectedKeywords != null && DetectedKeywords.Any(k => k.IsSelected));
+                                   : DetectedKeywords != null && DetectedKeywords.Any(k => k.Occurrences.Any(o => o.IsSelected)));
     
     private bool HasDictionary { get; set; }
     
     protected override async Task OnInitializedAsync()
     {
-        // 先檢查字典狀態
-        HasDictionary = (await DictionaryService.GetAllAsync()).Any();
-        await LoadSessionState();
+        // 先檢查字典狀態 - 這裡不使用 JS interop
+        try
+        {
+            HasDictionary = (await DictionaryService.GetAllAsync()).Any();
+        }
+        catch
+        {
+            // 預渲染階段可能會失敗，稍後在 OnAfterRenderAsync 中重試
+            HasDictionary = false;
+        }
         DebugLogService.Log($"MaskRestorePage initialized, HasDictionary={HasDictionary}", Models.LogLevel.Info);
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 在首次渲染後載入 session 狀態 (JS interop 現在可用)
+            await LoadSessionState();
+            StateHasChanged();
+        }
     }
     
     private async Task LoadSessionState()
@@ -403,15 +427,82 @@
         });
     }
     
+    private async Task HandleOccurrenceClicked(KeywordOccurrence occurrence)
+    {
+        // 切換此 occurrence 的選取狀態
+        occurrence.IsSelected = !occurrence.IsSelected;
+        
+        // 更新父級 keyword 的選取狀態
+        var parentKeyword = DetectedKeywords?.FirstOrDefault(k => k.Occurrences.Contains(occurrence));
+        if (parentKeyword != null)
+        {
+            parentKeyword.IsSelected = parentKeyword.Occurrences.Any(o => o.IsSelected);
+        }
+        
+        HighlightedOccurrenceId = occurrence.Id;
+        DebugLogService.Log($"Occurrence toggled: {occurrence.OriginalText} ({occurrence.PositionText}) -> {occurrence.IsSelected}", Models.LogLevel.Debug);
+        StateHasChanged();
+        
+        // Clear highlight after animation
+        await Task.Delay(1500);
+        HighlightedOccurrenceId = null;
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task HandleOccurrenceClickedFromPanel(KeywordOccurrence occurrence)
+    {
+        // 從控制面板點擊，跳轉到對應位置
+        HighlightedOccurrenceId = occurrence.Id;
+        StateHasChanged();
+        
+        // 嘗試滾動到該位置
+        try
+        {
+            await JS.InvokeVoidAsync("CovenantPromptKey.scrollToElement", $"occ-{occurrence.Id}");
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"Failed to scroll to occurrence: {ex.Message}", Models.LogLevel.Warning);
+        }
+        
+        // Clear highlight after animation
+        await Task.Delay(2000);
+        HighlightedOccurrenceId = null;
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task HandleOccurrenceToggled(KeywordOccurrence occurrence)
+    {
+        DebugLogService.Log($"Occurrence toggled from panel: {occurrence.OriginalText} ({occurrence.PositionText}) -> {occurrence.IsSelected}", Models.LogLevel.Debug);
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleLineClicked(int lineNumber)
+    {
+        DebugLogService.Log($"Line clicked: {lineNumber}", Models.LogLevel.Debug);
+        try
+        {
+            await JS.InvokeVoidAsync("CovenantPromptKey.scrollToLine", "textarea-" + Guid.NewGuid().ToString("N"), lineNumber, "");
+        }
+        catch
+        {
+            // 忽略 JS interop 錯誤
+        }
+        await Task.CompletedTask;
+    }
+    
     private async Task HandleKeywordToggled(DetectedKeyword keyword)
     {
         DebugLogService.Log($"Keyword toggled: {keyword.Mapping.SensitiveKey} -> {keyword.IsSelected}", Models.LogLevel.Debug);
+        StateHasChanged();
         await Task.CompletedTask;
     }
     
     private async Task HandleSelectionChanged(IEnumerable<DetectedKeyword> selectedKeywords)
     {
         DebugLogService.Log($"Selection changed: {selectedKeywords.Count()} keywords selected", Models.LogLevel.Debug);
+        StateHasChanged();
         await Task.CompletedTask;
     }
     

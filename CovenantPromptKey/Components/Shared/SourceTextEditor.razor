@@ -41,7 +41,18 @@
         <div class="text-area-wrapper">
             @if (IsEditable)
             {
-                <textarea class="text-input" 
+                @* 高亮層 - 顯示在 textarea 下方 *@
+                @if (DetectedKeywords != null && DetectedKeywords.Any())
+                {
+                    <div class="highlight-backdrop" 
+                         id="@_highlightBackdropId"
+                         @ref="highlightBackdropRef">
+                        @RenderHighlightedText()
+                    </div>
+                }
+                
+                @* 輸入層 - 透明的 textarea *@
+                <textarea class="text-input @(DetectedKeywords != null && DetectedKeywords.Any() ? "has-highlights" : "")" 
                           id="@_textAreaId"
                           @ref="textAreaRef"
                           @bind="InternalText"
@@ -116,6 +127,12 @@
     public EventCallback<DetectedKeyword> OnKeywordClicked { get; set; }
     
     [Parameter]
+    public EventCallback<KeywordOccurrence> OnOccurrenceClicked { get; set; }
+    
+    [Parameter]
+    public string? HighlightedOccurrenceId { get; set; }
+    
+    [Parameter]
     public EventCallback OnTextCleared { get; set; }
     
     [Parameter]
@@ -127,11 +144,13 @@
     private ElementReference textAreaRef;
     private ElementReference textDisplayRef;
     private ElementReference lineNumbersRef;
+    private ElementReference highlightBackdropRef;
     
     private readonly string _containerId = $"editor-{Guid.NewGuid():N}";
     private readonly string _lineNumbersId = $"linenums-{Guid.NewGuid():N}";
     private readonly string _textAreaId = $"textarea-{Guid.NewGuid():N}";
     private readonly string _textDisplayId = $"textdisplay-{Guid.NewGuid():N}";
+    private readonly string _highlightBackdropId = $"highlight-{Guid.NewGuid():N}";
     
     private int? _highlightedLine = null;
     
@@ -160,9 +179,16 @@
     
     private async Task HandleScroll()
     {
-        // Sync scroll position between textarea and line numbers
-        // This would require JS interop for precise synchronization
-        await Task.CompletedTask;
+        // Sync scroll position between textarea, highlight backdrop and line numbers
+        try
+        {
+            await JS.InvokeVoidAsync("CovenantPromptKey.syncEditorScroll", 
+                _textAreaId, _highlightBackdropId, _lineNumbersId);
+        }
+        catch
+        {
+            // Ignore JS interop errors during prerendering
+        }
     }
     
     private async Task HandleKeywordClick(DetectedKeyword keyword)
@@ -199,7 +225,7 @@
         
         int currentIndex = 0;
         int seq = 2;
-        
+
         foreach (var item in allOccurrences)
         {
             var occ = item.Occurrence;
@@ -216,22 +242,27 @@
                 builder.AddContent(seq++, beforeText);
             }
             
-            // Add highlighted keyword
+            // Build CSS classes based on selection state
             var warningClass = occ.HasContextWarning ? "has-warning" : "";
+            var selectedClass = occ.IsSelected ? "selected" : "deselected";
+            var highlightClass = HighlightedOccurrenceId == occ.Id ? "flash-highlight" : "";
+            
             builder.OpenElement(seq++, "span");
-            builder.AddAttribute(seq++, "class", $"keyword-highlight {(keyword.IsSelected ? "selected" : "")} {warningClass}");
+            builder.AddAttribute(seq++, "class", $"keyword-highlight {selectedClass} {warningClass} {highlightClass}");
             builder.AddAttribute(seq++, "style", $"--keyword-color: {keyword.Mapping.HighlightColor ?? "#ffc107"}");
+            builder.AddAttribute(seq++, "data-occurrence-id", occ.Id);
+            builder.AddAttribute(seq++, "id", $"occ-{occ.Id}");
             
             var tooltip = occ.HasContextWarning 
-                ? $"⚠️ {keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey} (注意：緊鄰中文字元)"
-                : $"{keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey}";
+                ? $"⚠️ {keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey} ({occ.PositionText}) - 緊鄰中文字元"
+                : $"{keyword.Mapping.SensitiveKey} → {keyword.Mapping.SafeKey} ({occ.PositionText})";
             builder.AddAttribute(seq++, "title", tooltip);
             
-            // Add click handler if delegate exists
-            if (OnKeywordClicked.HasDelegate)
+            // Add click handler for occurrence
+            if (OnOccurrenceClicked.HasDelegate)
             {
-                var capturedKeyword = keyword;
-                builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create(this, () => HandleKeywordClick(capturedKeyword)));
+                var capturedOcc = occ;
+                builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create(this, () => HandleOccurrenceClick(capturedOcc)));
                 builder.AddAttribute(seq++, "role", "button");
             }
             
@@ -249,6 +280,14 @@
         
         builder.CloseElement();
     };
+
+    private async Task HandleOccurrenceClick(KeywordOccurrence occurrence)
+    {
+        if (OnOccurrenceClicked.HasDelegate)
+        {
+            await OnOccurrenceClicked.InvokeAsync(occurrence);
+        }
+    }
     
     /// <summary>
     /// Scroll to a specific line number (1-based)

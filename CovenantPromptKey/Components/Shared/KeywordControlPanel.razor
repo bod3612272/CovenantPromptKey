@@ -63,7 +63,7 @@
         <div class="keyword-list">
             @foreach (var keyword in FilteredKeywords)
             {
-                var isExpanded = _expandedKeywords.Contains(keyword.Mapping.SensitiveKey);
+                var isExpanded = !_collapsedKeywords.Contains(keyword.Mapping.SensitiveKey);
                 <div class="keyword-item-container">
                     <div class="keyword-item @(keyword.IsSelected ? "selected" : "") @(HighlightedKeyword == keyword.Mapping.SensitiveKey ? "highlighted" : "")"
                          @onclick="() => ToggleKeyword(keyword)"
@@ -115,18 +115,38 @@
                     {
                         <div class="keyword-occurrences">
                             <div class="occurrences-header">
-                                <i class="bi bi-geo-alt"></i> 出現位置 (點擊跳轉)
+                                <i class="bi bi-geo-alt"></i> 出現位置 (點擊切換選取)
                             </div>
                             <div class="occurrences-list">
+                                @{ var occIndex = 0; }
                                 @foreach (var occ in keyword.Occurrences.Take(MaxOccurrencesToShow))
                                 {
-                                    <button class="occurrence-btn"
-                                            @onclick="() => HandleLineClick(occ.LineNumber)"
-                                            @onclick:stopPropagation="true"
-                                            title="跳至第 @occ.LineNumber 行">
-                                        <span class="line-badge">L@occ.LineNumber</span>
-                                        <span class="occurrence-preview">@TruncateText(occ.OriginalText, 15)</span>
-                                    </button>
+                                    occIndex++;
+                                    var capturedOcc = occ;
+                                    var capturedKeyword = keyword;
+                                    <div class="occurrence-item @(occ.IsSelected ? "selected" : "") @(HighlightedOccurrenceId == occ.Id ? "highlighted" : "")"
+                                         @onclick="() => ToggleOccurrence(capturedKeyword, capturedOcc)"
+                                         @onclick:stopPropagation="true">
+                                        <input type="checkbox" 
+                                               checked="@occ.IsSelected"
+                                               disabled="@IsDisabled"
+                                               @onclick:stopPropagation="true"
+                                               @onchange="() => ToggleOccurrence(capturedKeyword, capturedOcc)" />
+                                        <span class="occurrence-index">#@occIndex</span>
+                                        <span class="position-badge" title="@occ.PositionText">
+                                            @occ.PositionText
+                                        </span>
+                                        <button class="jump-btn"
+                                                @onclick="() => HandleOccurrenceClick(capturedOcc)"
+                                                @onclick:stopPropagation="true"
+                                                title="跳至此位置">
+                                            <i class="bi bi-arrow-right-circle"></i>
+                                        </button>
+                                        @if (occ.HasContextWarning)
+                                        {
+                                            <span class="occ-warning" title="注意：緊鄰中文字元">⚠️</span>
+                                        }
+                                    </div>
                                 }
                                 @if (keyword.Occurrences.Count() > MaxOccurrencesToShow)
                                 {
@@ -164,7 +184,16 @@
     public EventCallback<int> OnLineClicked { get; set; }
     
     [Parameter]
+    public EventCallback<KeywordOccurrence> OnOccurrenceClicked { get; set; }
+    
+    [Parameter]
+    public EventCallback<KeywordOccurrence> OnOccurrenceToggled { get; set; }
+    
+    [Parameter]
     public string? HighlightedKeyword { get; set; }
+    
+    [Parameter]
+    public string? HighlightedOccurrenceId { get; set; }
     
     [Parameter]
     public bool IsDisabled { get; set; } = false;
@@ -173,15 +202,17 @@
     public bool ShowSearch { get; set; } = true;
     
     [Parameter]
-    public int MaxOccurrencesToShow { get; set; } = 10;
+    public int MaxOccurrencesToShow { get; set; } = 20;
     
     private string SearchTerm { get; set; } = string.Empty;
-    private HashSet<string> _expandedKeywords = [];
+    private HashSet<string> _collapsedKeywords = [];
     
     private int TotalCount => DetectedKeywords?.Count() ?? 0;
     private int SelectedCount => DetectedKeywords?.Count(k => k.IsSelected) ?? 0;
-    private bool AllSelected => TotalCount > 0 && SelectedCount == TotalCount;
-    private bool NoneSelected => SelectedCount == 0;
+    private int TotalOccurrences => DetectedKeywords?.Sum(k => k.Count) ?? 0;
+    private int SelectedOccurrences => DetectedKeywords?.Sum(k => k.Occurrences?.Count(o => o.IsSelected) ?? 0) ?? 0;
+    private bool AllSelected => TotalOccurrences > 0 && SelectedOccurrences == TotalOccurrences;
+    private bool NoneSelected => SelectedOccurrences == 0;
     
     private IEnumerable<DetectedKeyword> FilteredKeywords
     {
@@ -207,12 +238,49 @@
         
         keyword.IsSelected = !keyword.IsSelected;
         
+        // 同步更新所有出現位置的選取狀態
+        foreach (var occ in keyword.Occurrences)
+        {
+            occ.IsSelected = keyword.IsSelected;
+        }
+        
         if (OnKeywordToggled.HasDelegate)
         {
             await OnKeywordToggled.InvokeAsync(keyword);
         }
         
         await NotifySelectionChanged();
+    }
+    
+    private async Task ToggleOccurrence(DetectedKeyword keyword, KeywordOccurrence occurrence)
+    {
+        if (IsDisabled) return;
+        
+        occurrence.IsSelected = !occurrence.IsSelected;
+        
+        // 更新父級關鍵字的選取狀態 (如果有任何一個 occurrence 被選取則為 true)
+        keyword.IsSelected = keyword.Occurrences.Any(o => o.IsSelected);
+        
+        if (OnOccurrenceToggled.HasDelegate)
+        {
+            await OnOccurrenceToggled.InvokeAsync(occurrence);
+        }
+        
+        await NotifySelectionChanged();
+    }
+    
+    private async Task HandleOccurrenceClick(KeywordOccurrence occurrence)
+    {
+        if (OnOccurrenceClicked.HasDelegate)
+        {
+            await OnOccurrenceClicked.InvokeAsync(occurrence);
+        }
+        
+        // 同時觸發行號點擊事件
+        if (OnLineClicked.HasDelegate)
+        {
+            await OnLineClicked.InvokeAsync(occurrence.LineNumber);
+        }
     }
     
     private async Task SelectAll()
@@ -222,6 +290,10 @@
         foreach (var keyword in DetectedKeywords)
         {
             keyword.IsSelected = true;
+            foreach (var occ in keyword.Occurrences)
+            {
+                occ.IsSelected = true;
+            }
         }
         
         await NotifySelectionChanged();
@@ -234,6 +306,10 @@
         foreach (var keyword in DetectedKeywords)
         {
             keyword.IsSelected = false;
+            foreach (var occ in keyword.Occurrences)
+            {
+                occ.IsSelected = false;
+            }
         }
         
         await NotifySelectionChanged();
@@ -245,7 +321,11 @@
         
         foreach (var keyword in DetectedKeywords)
         {
-            keyword.IsSelected = !keyword.IsSelected;
+            foreach (var occ in keyword.Occurrences)
+            {
+                occ.IsSelected = !occ.IsSelected;
+            }
+            keyword.IsSelected = keyword.Occurrences.Any(o => o.IsSelected);
         }
         
         await NotifySelectionChanged();
@@ -274,13 +354,13 @@
     
     private void ToggleExpand(string sensitiveKey)
     {
-        if (_expandedKeywords.Contains(sensitiveKey))
+        if (_collapsedKeywords.Contains(sensitiveKey))
         {
-            _expandedKeywords.Remove(sensitiveKey);
+            _collapsedKeywords.Remove(sensitiveKey);
         }
         else
         {
-            _expandedKeywords.Add(sensitiveKey);
+            _collapsedKeywords.Add(sensitiveKey);
         }
     }
     

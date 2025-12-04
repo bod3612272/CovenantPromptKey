@@ -31,6 +31,11 @@ public class SessionStorageService : ISessionStorageService
 
             return JsonSerializer.Deserialize<T>(json);
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop
+            return default;
+        }
         catch (JsonException)
         {
             // Return default if JSON is invalid
@@ -41,19 +46,40 @@ public class SessionStorageService : ISessionStorageService
     /// <inheritdoc />
     public async Task SetItemAsync<T>(string key, T value)
     {
-        var json = JsonSerializer.Serialize(value);
-        await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", key, json);
+        try
+        {
+            var json = JsonSerializer.Serialize(value);
+            await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", key, json);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop，靜默忽略
+        }
     }
 
     /// <inheritdoc />
     public async Task RemoveItemAsync(string key)
     {
-        await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", key);
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", key);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop，靜默忽略
+        }
     }
 
     /// <inheritdoc />
     public async Task ClearAsync()
     {
-        await _jsRuntime.InvokeVoidAsync("sessionStorage.clear");
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("sessionStorage.clear");
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerendering") || ex.Message.Contains("statically"))
+        {
+            // 在預渲染階段無法使用 JS interop，靜默忽略
+        }
     }
 }

@@ -110,8 +110,42 @@
 .text-area-wrapper {
     flex: 1;
     position: relative;
-    overflow: auto;
+    overflow: hidden;
     min-height: 0;
+}
+
+/* Highlight backdrop - 高亮層顯示在 textarea 下方 */
+.highlight-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.75rem;
+    overflow: auto;
+    font-family: var(--bs-font-monospace);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    z-index: 0;
+    background: var(--bs-body-bg);
+}
+
+.highlight-backdrop .highlighted-text {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: var(--bs-body-color);
+}
+
+.highlight-backdrop .keyword-highlight {
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 /* Text input (editable mode) */
@@ -130,6 +164,13 @@
     position: relative;
     z-index: 1;
     overflow: auto;
+}
+
+/* 當有高亮時，讓 textarea 文字透明，只顯示 caret */
+.text-input.has-highlights {
+    color: transparent;
+    caret-color: var(--bs-body-color);
+    background: transparent;
 }
 
 .text-input:focus {
@@ -201,6 +242,7 @@
     padding: 0.1em 0.2em;
     cursor: pointer;
     transition: all 0.15s ease;
+    position: relative;
 }
 
 .keyword-highlight:hover {
@@ -208,18 +250,51 @@
     box-shadow: 0 0 0 2px var(--keyword-color, #ffc107);
 }
 
+/* Selected occurrence - full color */
 .keyword-highlight.selected {
-    box-shadow: 0 0 0 2px var(--bs-primary);
+    box-shadow: 0 0 0 2px var(--bs-success);
+    background-color: var(--keyword-color, #ffc107);
+}
+
+/* Deselected occurrence - dimmed/greyed out */
+.keyword-highlight.deselected {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.keyword-highlight.deselected:hover {
+    opacity: 0.8;
+    box-shadow: 0 0 0 2px var(--bs-secondary);
+}
+
+/* Flash highlight when jumping to occurrence */
+.keyword-highlight.flash-highlight {
+    animation: keyword-flash 0.5s ease-out 3;
+    box-shadow: 0 0 0 3px var(--bs-warning);
+}
+
+@keyframes keyword-flash {
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--bs-warning);
+    }
+    50% {
+        box-shadow: 0 0 0 6px var(--bs-warning), 0 0 15px var(--bs-warning);
+    }
 }
 
 /* Warning style for keywords with adjacent Chinese characters */
-.keyword-highlight.warning {
+.keyword-highlight.has-warning {
     box-shadow: 0 0 0 2px var(--bs-warning);
-    animation: warning-pulse 1.5s ease-in-out infinite;
 }
 
-.keyword-highlight.warning.selected {
-    box-shadow: 0 0 0 2px var(--bs-warning), 0 0 0 4px var(--bs-primary);
+.keyword-highlight.has-warning.selected {
+    box-shadow: 0 0 0 2px var(--bs-warning), 0 0 0 4px var(--bs-success);
+}
+
+.keyword-highlight.has-warning.deselected {
+    box-shadow: none;
 }
 
 @keyframes warning-pulse {
