@@ -46,12 +46,78 @@
     font-size: 0.75rem;
 }
 
+.edit-btn,
+.complete-edit-btn,
+.cancel-edit-btn,
+.wrap-btn,
+.unwrap-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* 自動換行控制組 */
+.wrap-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+}
+
+.wrap-width-input {
+    width: 3.5rem;
+    padding: 0.125rem 0.25rem;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.wrap-width-label {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+
+.unwrap-btn {
+    margin-left: auto;
+}
+
+.complete-edit-btn {
+    margin-left: 0.5rem;
+}
+
+/* Edit mode hints */
+.edit-mode-hint,
+.readonly-hint {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.edit-mode-hint {
+    background: var(--bs-info-bg-subtle);
+    color: var(--bs-info-text-emphasis);
+    border-bottom: 1px solid var(--bs-info-border-subtle);
+}
+
+.readonly-hint {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary-text-emphasis);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.edit-mode-hint i,
+.readonly-hint i {
+    font-size: 0.875rem;
+}
+
 /* Editor container */
 .editor-container {
     display: flex;
     flex: 1;
     overflow: hidden;
     position: relative;
+    min-width: 0;
 }
 
 /* Line numbers */
@@ -112,40 +178,8 @@
     position: relative;
     overflow: hidden;
     min-height: 0;
-}
-
-/* Highlight backdrop - 高亮層顯示在 textarea 下方 */
-.highlight-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 0.75rem;
-    overflow: auto;
-    font-family: var(--bs-font-monospace);
-    font-size: 0.875rem;
-    line-height: 1.5;
-    pointer-events: none;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    z-index: 0;
-    background: var(--bs-body-bg);
-}
-
-.highlight-backdrop .highlighted-text {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    color: var(--bs-body-color);
-}
-
-.highlight-backdrop .keyword-highlight {
-    pointer-events: auto;
-    cursor: pointer;
+    min-width: 0;
+    width: 0; /* 強制 flex 子元素收縮 */
 }
 
 /* Text input (editable mode) */
@@ -159,18 +193,14 @@
     font-family: var(--bs-font-monospace);
     font-size: 0.875rem;
     line-height: 1.5;
-    background: transparent;
+    background: var(--bs-body-bg);
     color: var(--bs-body-color);
     position: relative;
     z-index: 1;
     overflow: auto;
-}
-
-/* 當有高亮時，讓 textarea 文字透明，只顯示 caret */
-.text-input.has-highlights {
-    color: transparent;
-    caret-color: var(--bs-body-color);
-    background: transparent;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    box-sizing: border-box;
 }
 
 .text-input:focus {
@@ -187,130 +217,46 @@
     cursor: not-allowed;
 }
 
-/* Text display (readonly mode) */
+/* Text display (readonly mode or with highlights) */
 .text-display {
     width: 100%;
     height: 100%;
     padding: 0.75rem;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-family: var(--bs-font-monospace);
     font-size: 0.875rem;
     line-height: 1.5;
+    background: var(--bs-body-bg);
+    box-sizing: border-box;
+}
+
+.text-display.with-highlights {
+    cursor: text;
+    user-select: text;
 }
 
 .plain-text,
 .highlighted-text {
     margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word;
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
     color: var(--bs-body-color);
+    width: 100%;
+    max-width: 100%;
+    display: block;
 }
 
-/* Highlight overlay (for editable mode with highlights) */
-.highlight-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 0.75rem;
-    pointer-events: none;
-    overflow: hidden;
-    font-family: var(--bs-font-monospace);
-    font-size: 0.875rem;
-    line-height: 1.5;
-    z-index: 0;
-    color: transparent;
-}
-
-.highlight-overlay .highlighted-text {
-    color: transparent;
-}
-
-.highlight-overlay .keyword-highlight {
-    color: transparent;
-}
-
-/* Keyword highlighting */
-.keyword-highlight {
-    background-color: var(--keyword-color, #ffc107);
-    color: var(--bs-dark);
-    border-radius: 0.2em;
-    padding: 0.1em 0.2em;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: relative;
-}
-
-.keyword-highlight:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 0 0 2px var(--keyword-color, #ffc107);
-}
-
-/* Selected occurrence - full color */
-.keyword-highlight.selected {
-    box-shadow: 0 0 0 2px var(--bs-success);
-    background-color: var(--keyword-color, #ffc107);
-}
-
-/* Deselected occurrence - dimmed/greyed out */
-.keyword-highlight.deselected {
-    background-color: var(--bs-secondary-bg);
-    color: var(--bs-secondary-color);
-    opacity: 0.6;
-    text-decoration: line-through;
-}
-
-.keyword-highlight.deselected:hover {
-    opacity: 0.8;
-    box-shadow: 0 0 0 2px var(--bs-secondary);
-}
-
-/* Flash highlight when jumping to occurrence */
-.keyword-highlight.flash-highlight {
-    animation: keyword-flash 0.5s ease-out 3;
-    box-shadow: 0 0 0 3px var(--bs-warning);
-}
-
-@keyframes keyword-flash {
-    0%, 100% {
-        box-shadow: 0 0 0 3px var(--bs-warning);
-    }
-    50% {
-        box-shadow: 0 0 0 6px var(--bs-warning), 0 0 15px var(--bs-warning);
-    }
-}
-
-/* Warning style for keywords with adjacent Chinese characters */
-.keyword-highlight.has-warning {
-    box-shadow: 0 0 0 2px var(--bs-warning);
-}
-
-.keyword-highlight.has-warning.selected {
-    box-shadow: 0 0 0 2px var(--bs-warning), 0 0 0 4px var(--bs-success);
-}
-
-.keyword-highlight.has-warning.deselected {
-    box-shadow: none;
-}
-
-@keyframes warning-pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
-}
-
-/* In highlight overlay, make keywords visible */
-.highlight-overlay .keyword-highlight {
-    color: transparent;
-    pointer-events: auto;
-}
+/* 
+ * Keyword highlighting 樣式已移至 app.css (全域)
+ * 因為 RenderTreeBuilder 動態生成的元素沒有 Blazor scoped CSS 的屬性標記
+ * 所以這裡的 scoped 樣式不會套用到動態生成的 .keyword-highlight 元素
+ */
 
 /* Error message */
 .editor-error {

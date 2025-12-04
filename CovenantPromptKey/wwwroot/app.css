@@ -80,21 +80,71 @@ h1:focus {
 /* Global Keyword Highlight Styles */
 .keyword-highlight {
     display: inline;
-    padding: 0.1em 0.25em;
+    padding: 0;
+    margin: 0;
     border-radius: 0.2em;
     font-weight: inherit;
     cursor: pointer;
     transition: all 0.15s ease;
     text-decoration: none;
+    background-color: var(--keyword-color, #ffc107);
+    color: var(--bs-dark);
+    position: relative;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
 }
 
 .keyword-highlight:hover {
-    filter: brightness(1.15);
+    filter: brightness(1.1);
     text-decoration: none;
+    box-shadow: 0 0 0 2px var(--keyword-color, #ffc107);
 }
 
+/* Selected occurrence - full color */
 .keyword-highlight.selected {
-    box-shadow: 0 0 0 2px var(--bs-primary);
+    box-shadow: 0 0 0 2px var(--bs-success);
+    background-color: var(--keyword-color, #ffc107);
+}
+
+/* Deselected occurrence - dimmed/greyed out */
+.keyword-highlight.deselected {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.keyword-highlight.deselected:hover {
+    opacity: 0.8;
+    box-shadow: 0 0 0 2px var(--bs-secondary);
+}
+
+/* Flash highlight when jumping to occurrence */
+.keyword-highlight.flash-highlight {
+    animation: keyword-flash 0.5s ease-out 3;
+    box-shadow: 0 0 0 3px var(--bs-warning);
+}
+
+@keyframes keyword-flash {
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--bs-warning);
+    }
+    50% {
+        box-shadow: 0 0 0 6px var(--bs-warning), 0 0 15px var(--bs-warning);
+    }
+}
+
+/* Warning style for keywords with adjacent Chinese characters */
+.keyword-highlight.has-warning {
+    box-shadow: 0 0 0 2px var(--bs-warning);
+}
+
+.keyword-highlight.has-warning.selected {
+    box-shadow: 0 0 0 2px var(--bs-warning), 0 0 0 4px var(--bs-success);
+}
+
+.keyword-highlight.has-warning.deselected {
+    box-shadow: none;
 }
 
 /* Toast Container */

@@ -5,6 +5,22 @@
 
 window.CovenantPromptKey = {
     /**
+     * Force set textarea value - workaround for Blazor binding issues
+     * @param {string} textAreaId - Textarea element ID
+     * @param {string} value - New value to set
+     */
+    setTextAreaValue: function (textAreaId, value) {
+        const textArea = document.getElementById(textAreaId);
+        if (textArea) {
+            textArea.value = value;
+            console.log('setTextAreaValue: Set value length:', value.length);
+            return true;
+        }
+        console.warn('setTextAreaValue: textArea not found:', textAreaId);
+        return false;
+    },
+
+    /**
      * Copy text to clipboard
      * @param {string} text - Text to copy
      * @returns {Promise<boolean>} - Success status
@@ -65,6 +81,26 @@ window.CovenantPromptKey = {
     },
 
     /**
+     * Sync line numbers scroll position with text display
+     * @param {string} textDisplayId - Text display element ID
+     * @param {string} lineNumbersId - Line numbers container ID
+     */
+    syncLineNumbers: function (textDisplayId, lineNumbersId) {
+        const textDisplay = document.getElementById(textDisplayId);
+        if (!textDisplay) return;
+
+        const scrollTop = textDisplay.scrollTop;
+
+        // Sync line numbers (vertical only)
+        if (lineNumbersId) {
+            const lineNumbers = document.getElementById(lineNumbersId);
+            if (lineNumbers) {
+                lineNumbers.scrollTop = scrollTop;
+            }
+        }
+    },
+
+    /**
      * Sync scroll position between textarea, highlight backdrop and line numbers
      * @param {string} textAreaId - Textarea element ID
      * @param {string} highlightBackdropId - Highlight backdrop element ID
@@ -72,12 +108,15 @@ window.CovenantPromptKey = {
      */
     syncEditorScroll: function (textAreaId, highlightBackdropId, lineNumbersId) {
         const textArea = document.getElementById(textAreaId);
-        if (!textArea) return;
+        if (!textArea) {
+            console.warn('syncEditorScroll: textArea not found:', textAreaId);
+            return;
+        }
 
         const scrollTop = textArea.scrollTop;
         const scrollLeft = textArea.scrollLeft;
 
-        // Sync highlight backdrop
+        // Sync highlight backdrop scroll position directly
         if (highlightBackdropId) {
             const backdrop = document.getElementById(highlightBackdropId);
             if (backdrop) {
@@ -86,13 +125,59 @@ window.CovenantPromptKey = {
             }
         }
 
-        // Sync line numbers
+        // Sync line numbers (vertical only)
         if (lineNumbersId) {
             const lineNumbers = document.getElementById(lineNumbersId);
             if (lineNumbers) {
                 lineNumbers.scrollTop = scrollTop;
             }
         }
+    },
+
+    /**
+     * Initialize scroll sync for editor - sets up event listeners
+     * @param {string} textAreaId - Textarea element ID
+     * @param {string} highlightBackdropId - Highlight backdrop element ID
+     * @param {string} lineNumbersId - Line numbers container ID
+     */
+    initEditorScrollSync: function (textAreaId, highlightBackdropId, lineNumbersId) {
+        const textArea = document.getElementById(textAreaId);
+        if (!textArea) {
+            console.warn('initEditorScrollSync: textArea not found:', textAreaId);
+            return;
+        }
+
+        // Remove existing listener if any (to avoid duplicates)
+        if (textArea._scrollSyncHandler) {
+            textArea.removeEventListener('scroll', textArea._scrollSyncHandler);
+        }
+
+        // Create and store the scroll handler
+        textArea._scrollSyncHandler = function() {
+            const scrollTop = textArea.scrollTop;
+            const scrollLeft = textArea.scrollLeft;
+
+            // Sync highlight backdrop
+            const backdrop = document.getElementById(highlightBackdropId);
+            if (backdrop) {
+                backdrop.scrollTop = scrollTop;
+                backdrop.scrollLeft = scrollLeft;
+            }
+
+            // Sync line numbers
+            const lineNumbers = document.getElementById(lineNumbersId);
+            if (lineNumbers) {
+                lineNumbers.scrollTop = scrollTop;
+            }
+        };
+
+        // Add scroll event listener
+        textArea.addEventListener('scroll', textArea._scrollSyncHandler);
+
+        // Initial sync
+        textArea._scrollSyncHandler();
+        
+        console.log('initEditorScrollSync: initialized for', textAreaId);
     },
 
     /**

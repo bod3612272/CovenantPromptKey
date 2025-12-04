@@ -96,8 +96,8 @@
         
         <ControlContent>
             <div class="control-panel-content">
-                @* 字典狀態提示 *@
-                @if (!HasDictionary)
+                @* 字典狀態提示 - 只在已完成檢查且確實沒有字典時顯示 *@
+                @if (_hasDictionaryChecked && !HasDictionary)
                 {
                     <div class="alert alert-warning mb-2" role="alert">
                         <i class="bi bi-exclamation-triangle"></i>
@@ -191,6 +191,7 @@
                                    : DetectedKeywords != null && DetectedKeywords.Any(k => k.Occurrences.Any(o => o.IsSelected)));
     
     private bool HasDictionary { get; set; }
+    private bool _hasDictionaryChecked { get; set; } = false; // 標記是否已完成字典檢查
     
     protected override async Task OnInitializedAsync()
     {
@@ -221,6 +222,11 @@
     {
         try
         {
+            // 首先重新檢查字典狀態（JS interop 現在可用）
+            HasDictionary = (await DictionaryService.GetAllAsync()).Any();
+            _hasDictionaryChecked = true; // 標記已完成檢查
+            DebugLogService.Log($"Dictionary check in LoadSessionState: HasDictionary={HasDictionary}", Models.LogLevel.Debug);
+            
             var session = await WorkSessionService.GetCurrentSessionAsync();
             if (session != null)
             {
@@ -234,12 +240,6 @@
                 }
                 
                 DebugLogService.Log("Session state restored", Models.LogLevel.Debug);
-            }
-            
-            // 確保 HasDictionary 狀態正確
-            if (!HasDictionary)
-            {
-                HasDictionary = (await DictionaryService.GetAllAsync()).Any();
             }
         }
         catch (Exception ex)
@@ -298,6 +298,7 @@
     
     private async Task HandleSourceTextChanged(string newText)
     {
+        Console.WriteLine($"[MaskRestorePage] HandleSourceTextChanged: 新文字長度={newText.Length}");
         SourceText = newText;
         SourceErrorMessage = null;
         

@@ -12,7 +12,55 @@
                 @CharacterCount / @MaxLength 字元
             </span>
         }
-        @if (ShowClearButton && IsEditable && !string.IsNullOrEmpty(Text))
+        @if (IsEditable && DetectedKeywords != null && DetectedKeywords.Any() && !_isInEditMode)
+        {
+            <button class="btn btn-sm btn-outline-primary edit-btn" 
+                    @onclick="EnterEditMode" 
+                    title="編輯原文">
+                <i class="bi bi-pencil"></i> 編輯
+            </button>
+        }
+        @if (IsEditable && _isInEditMode)
+        {
+            @* 自動換行按鈕組 *@
+            @if (_textBeforeWrap == null)
+            {
+                <div class="wrap-controls">
+                    <input type="number" 
+                           class="form-control form-control-sm wrap-width-input" 
+                           @bind="_wrapWidth" 
+                           min="20" 
+                           max="200" 
+                           title="換行寬度（字元數）" />
+                    <span class="wrap-width-label">字元</span>
+                    <button class="btn btn-sm btn-outline-info wrap-btn" 
+                            @onclick="ApplyAutoWrap" 
+                            title="將長行自動換行">
+                        <i class="bi bi-text-wrap"></i> 自動換行
+                    </button>
+                </div>
+            }
+            else
+            {
+                <button class="btn btn-sm btn-warning unwrap-btn" 
+                        @onclick="UndoAutoWrap" 
+                        title="還原換行前的文字">
+                    <i class="bi bi-arrow-counterclockwise"></i> 還原換行
+                </button>
+            }
+            
+            <button class="btn btn-sm btn-success complete-edit-btn" 
+                    @onclick="CompleteEditMode" 
+                    title="完成編輯並重新偵測">
+                <i class="bi bi-check-lg"></i> 完成編輯
+            </button>
+            <button class="btn btn-sm btn-outline-secondary cancel-edit-btn" 
+                    @onclick="CancelEditMode" 
+                    title="取消編輯">
+                <i class="bi bi-x-lg"></i> 取消
+            </button>
+        }
+        @if (ShowClearButton && IsEditable && !string.IsNullOrEmpty(Text) && !_isInEditMode)
         {
             <button class="btn btn-sm btn-outline-secondary clear-btn" 
                     @onclick="HandleClear" 
@@ -41,26 +89,37 @@
         <div class="text-area-wrapper">
             @if (IsEditable)
             {
-                @* 高亮層 - 顯示在 textarea 下方 *@
-                @if (DetectedKeywords != null && DetectedKeywords.Any())
+                @if (_isInEditMode || !(DetectedKeywords != null && DetectedKeywords.Any()))
                 {
-                    <div class="highlight-backdrop" 
-                         id="@_highlightBackdropId"
-                         @ref="highlightBackdropRef">
+                    @* 編輯模式或無關鍵字時，顯示可編輯的 textarea *@
+                    <textarea class="text-input" 
+                              id="@_textAreaId"
+                              @ref="textAreaRef"
+                              @bind="InternalText"
+                              @bind:event="oninput"
+                              placeholder="@Placeholder"
+                              disabled="@IsDisabled"
+                              spellcheck="false"></textarea>
+                    @if (_isInEditMode)
+                    {
+                        <div class="edit-mode-hint">
+                            <i class="bi bi-info-circle"></i> 編輯模式：修改完成後請點擊「完成編輯」重新偵測關鍵字
+                        </div>
+                    }
+                }
+                else
+                {
+                    @* 有偵測到關鍵字且非編輯模式時，顯示高亮結果 *@
+                    <div class="text-display with-highlights" 
+                         id="@_textDisplayId"
+                         @ref="textDisplayRef"
+                         @onscroll="HandleScroll">
                         @RenderHighlightedText()
                     </div>
+                    <div class="readonly-hint">
+                        <i class="bi bi-lock"></i> 已偵測關鍵字，點擊「編輯」按鈕可修改原文
+                    </div>
                 }
-                
-                @* 輸入層 - 透明的 textarea *@
-                <textarea class="text-input @(DetectedKeywords != null && DetectedKeywords.Any() ? "has-highlights" : "")" 
-                          id="@_textAreaId"
-                          @ref="textAreaRef"
-                          @bind="InternalText"
-                          @bind:event="oninput"
-                          @onscroll="HandleScroll"
-                          placeholder="@Placeholder"
-                          disabled="@IsDisabled"
-                          spellcheck="false"></textarea>
             }
             else
             {
@@ -144,15 +203,23 @@
     private ElementReference textAreaRef;
     private ElementReference textDisplayRef;
     private ElementReference lineNumbersRef;
-    private ElementReference highlightBackdropRef;
     
     private readonly string _containerId = $"editor-{Guid.NewGuid():N}";
     private readonly string _lineNumbersId = $"linenums-{Guid.NewGuid():N}";
     private readonly string _textAreaId = $"textarea-{Guid.NewGuid():N}";
     private readonly string _textDisplayId = $"textdisplay-{Guid.NewGuid():N}";
-    private readonly string _highlightBackdropId = $"highlight-{Guid.NewGuid():N}";
     
     private int? _highlightedLine = null;
+    private bool _isInEditMode = false;
+    private string _textBeforeEdit = string.Empty;
+    private string? _textBeforeWrap = null; // 用於自動換行還原
+    private int _wrapWidth = 75; // 預設換行寬度
+    
+    /// <summary>
+    /// 當編輯完成時觸發，通知父組件重新偵測關鍵字
+    /// </summary>
+    [Parameter]
+    public EventCallback OnEditCompleted { get; set; }
     
     private string InternalText
     {
@@ -171,19 +238,275 @@
     private bool IsOverLimit => CharacterCount > MaxLength;
     private int LineCount => string.IsNullOrEmpty(Text) ? 1 : Text.Split('\n').Length;
     
+    /// <summary>
+    /// 進入編輯模式
+    /// </summary>
+    private void EnterEditMode()
+    {
+        _textBeforeEdit = Text;
+        _isInEditMode = true;
+    }
+    
+    /// <summary>
+    /// 完成編輯並觸發重新偵測
+    /// </summary>
+    private async Task CompleteEditMode()
+    {
+        _isInEditMode = false;
+        if (OnEditCompleted.HasDelegate)
+        {
+            await OnEditCompleted.InvokeAsync();
+        }
+    }
+    
+    /// <summary>
+    /// 取消編輯，還原到編輯前的文字
+    /// </summary>
+    private void CancelEditMode()
+    {
+        InternalText = _textBeforeEdit;
+        _isInEditMode = false;
+        _textBeforeWrap = null; // 清除換行記錄
+    }
+    
+    /// <summary>
+    /// 將長行自動換行
+    /// </summary>
+    private async Task ApplyAutoWrap()
+    {
+        if (string.IsNullOrEmpty(Text)) return;
+        
+        // 儲存換行前的文字
+        _textBeforeWrap = Text;
+        
+        // 統一換行符為 \n，移除 \r
+        var normalizedText = Text.Replace("\r\n", "\n").Replace("\r", "\n");
+        var lines = normalizedText.Split('\n');
+        var wrappedLines = new List<string>();
+        
+        Console.WriteLine($"[AutoWrap] 總行數: {lines.Length}, 換行寬度: {_wrapWidth}");
+        
+        foreach (var line in lines)
+        {
+            int lineWidth = GetDisplayWidth(line, 0, line.Length);
+            Console.WriteLine($"[AutoWrap] 處理行: 長度={line.Length}, 顯示寬度={lineWidth}, 內容前20字='{(line.Length > 20 ? line[..20] : line)}'");
+            
+            if (lineWidth <= _wrapWidth)
+            {
+                wrappedLines.Add(line);
+                Console.WriteLine($"[AutoWrap] -> 不需換行");
+            }
+            else
+            {
+                // 智慧換行：嘗試在空格或標點處換行
+                var wrapped = WrapLine(line, _wrapWidth);
+                Console.WriteLine($"[AutoWrap] -> 換行後產生 {wrapped.Count} 行");
+                foreach (var w in wrapped)
+                {
+                    Console.WriteLine($"[AutoWrap]    -> '{(w.Length > 30 ? w[..30] + "..." : w)}' (長度={w.Length})");
+                }
+                wrappedLines.AddRange(wrapped);
+            }
+        }
+        
+        var newText = string.Join("\n", wrappedLines);
+        Console.WriteLine($"[AutoWrap] 完成，總行數變為: {wrappedLines.Count}");
+        
+        // 直接設定 Text 並通知父組件
+        Text = newText;
+        await TextChanged.InvokeAsync(newText);
+        
+        // 使用 JS 強制更新 textarea 的值
+        await JS.InvokeVoidAsync("CovenantPromptKey.setTextAreaValue", _textAreaId, newText);
+        
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// 計算字串的顯示寬度（中文算2，英文算1）
+    /// </summary>
+    private static int GetDisplayWidth(string text, int startIndex, int endIndex)
+    {
+        int width = 0;
+        for (int i = startIndex; i < endIndex && i < text.Length; i++)
+        {
+            width += IsCjkCharacter(text[i]) ? 2 : 1;
+        }
+        return width;
+    }
+    
+    /// <summary>
+    /// 計算字元的顯示寬度（中文算2，英文算1）
+    /// </summary>
+    private static int GetCharWidth(char c)
+    {
+        return IsCjkCharacter(c) ? 2 : 1;
+    }
+    
+    /// <summary>
+    /// 智慧換行單行文字（依顯示寬度：中文算2，英文算1）
+    /// </summary>
+    private static List<string> WrapLine(string line, int maxWidth)
+    {
+        var result = new List<string>();
+        
+        if (string.IsNullOrEmpty(line) || maxWidth <= 0)
+        {
+            result.Add(line ?? string.Empty);
+            return result;
+        }
+        
+        int startIndex = 0;
+        
+        while (startIndex < line.Length)
+        {
+            // 計算剩餘文字的顯示寬度
+            int remainingWidth = GetDisplayWidth(line, startIndex, line.Length);
+            
+            // 如果剩餘寬度小於等於 maxWidth，直接加入剩餘部分
+            if (remainingWidth <= maxWidth)
+            {
+                result.Add(line.Substring(startIndex));
+                break;
+            }
+            
+            // 尋找換行點
+            int breakPoint = FindBreakPoint(line, startIndex, maxWidth);
+            
+            // 加入這一段
+            result.Add(line.Substring(startIndex, breakPoint - startIndex));
+            startIndex = breakPoint;
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// 尋找合適的換行點（確保不切斷英文單字，中文可任意位置換行）
+    /// 依顯示寬度計算：中文算2，英文算1
+    /// </summary>
+    private static int FindBreakPoint(string text, int startIndex, int maxWidth)
+    {
+        // 先找出大約在 maxWidth 顯示寬度處的字元索引
+        int currentWidth = 0;
+        int endIndex = startIndex;
+        
+        while (endIndex < text.Length && currentWidth < maxWidth)
+        {
+            currentWidth += GetCharWidth(text[endIndex]);
+            if (currentWidth <= maxWidth)
+            {
+                endIndex++;
+            }
+        }
+        
+        // 確保至少前進一個字元，避免無限迴圈
+        if (endIndex == startIndex && startIndex < text.Length)
+        {
+            endIndex = startIndex + 1;
+        }
+        
+        // 從 endIndex 往前搜尋合適的換行點
+        for (int i = endIndex; i > startIndex; i--)
+        {
+            char currentChar = text[i - 1]; // 檢查這個位置的前一個字元
+            
+            // 在空格處換行
+            if (i < text.Length && char.IsWhiteSpace(text[i]))
+            {
+                return i;
+            }
+            
+            // 標點符號後可換行
+            if (IsPunctuation(currentChar))
+            {
+                return i;
+            }
+            
+            // CJK 字元後面可以換行
+            if (IsCjkCharacter(currentChar))
+            {
+                return i;
+            }
+            
+            // 如果當前位置是非英數字，且前一個是英數字（單字結束）
+            if (i < text.Length && !IsAsciiLetterOrDigit(text[i]) && IsAsciiLetterOrDigit(currentChar))
+            {
+                return i;
+            }
+        }
+        
+        // 找不到合適位置，強制在 endIndex 處斷開
+        return endIndex;
+    }
+    
+    /// <summary>
+    /// 判斷是否為標點符號
+    /// </summary>
+    private static bool IsPunctuation(char c)
+    {
+        var punctuation = ",.:;!?，。：；！？、）】」》』)]}>";
+        return punctuation.Contains(c);
+    }
+    
+    /// <summary>
+    /// 判斷是否為 ASCII 字母或數字
+    /// </summary>
+    private static bool IsAsciiLetterOrDigit(char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+    }
+    
+    /// <summary>
+    /// 判斷是否為 CJK（中日韓）字元
+    /// </summary>
+    private static bool IsCjkCharacter(char c)
+    {
+        // CJK 統一漢字範圍
+        return (c >= 0x4E00 && c <= 0x9FFF) ||   // CJK Unified Ideographs
+               (c >= 0x3400 && c <= 0x4DBF) ||   // CJK Unified Ideographs Extension A
+               (c >= 0x3000 && c <= 0x303F) ||   // CJK Symbols and Punctuation
+               (c >= 0xFF00 && c <= 0xFFEF) ||   // Halfwidth and Fullwidth Forms
+               (c >= 0x3040 && c <= 0x309F) ||   // Hiragana
+               (c >= 0x30A0 && c <= 0x30FF) ||   // Katakana
+               (c >= 0xAC00 && c <= 0xD7AF);     // Korean Hangul
+    }
+    
+    /// <summary>
+    /// 還原自動換行
+    /// </summary>
+    private void UndoAutoWrap()
+    {
+        if (_textBeforeWrap != null)
+        {
+            InternalText = _textBeforeWrap;
+            _textBeforeWrap = null;
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Sync line numbers scroll when there are highlights
+        if (firstRender || (DetectedKeywords != null && DetectedKeywords.Any()))
+        {
+            // No complex scroll sync needed anymore
+        }
+    }
+    
     private async Task HandleClear()
     {
+        _isInEditMode = false;
         InternalText = string.Empty;
         await OnTextCleared.InvokeAsync();
     }
     
     private async Task HandleScroll()
     {
-        // Sync scroll position between textarea, highlight backdrop and line numbers
+        // Sync line numbers scroll position
         try
         {
-            await JS.InvokeVoidAsync("CovenantPromptKey.syncEditorScroll", 
-                _textAreaId, _highlightBackdropId, _lineNumbersId);
+            await JS.InvokeVoidAsync("CovenantPromptKey.syncLineNumbers", 
+                _textDisplayId, _lineNumbersId);
         }
         catch
         {
