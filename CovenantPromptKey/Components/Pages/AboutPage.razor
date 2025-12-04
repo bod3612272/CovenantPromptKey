@@ -104,6 +104,60 @@
             </div>
         </section>
 
+        <!-- Data Storage -->
+        <section class="about-section">
+            <h2><i class="bi bi-hdd me-2"></i>資料儲存說明</h2>
+            <div class="section-content">
+                <p>
+                    本應用程式採用瀏覽器內建的 <strong>Web Storage API</strong> 來儲存您的字典資料：
+                </p>
+                
+                <div class="storage-info mt-3">
+                    <div class="storage-type mb-3">
+                        <h5><i class="bi bi-database me-2 text-primary"></i>localStorage</h5>
+                        <p class="text-muted mb-2">
+                            用於永久儲存關鍵字字典。資料會保留在瀏覽器中，即使關閉視窗或重新啟動電腦也不會遺失。
+                        </p>
+                        <ul class="small">
+                            <li>儲存位置：您的瀏覽器本機</li>
+                            <li>儲存上限：通常為 5-10 MB</li>
+                            <li>資料格式：JSON 結構化資料</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="storage-type mb-3">
+                        <h5><i class="bi bi-clock-history me-2 text-info"></i>sessionStorage</h5>
+                        <p class="text-muted mb-2">
+                            用於暫存工作階段資料（如目前的編輯內容）。關閉瀏覽器分頁後會自動清除。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong>清除瀏覽器資料的方法</strong>
+                        <p class="mb-2 mt-1">若您需要清除本應用程式儲存的資料，可使用以下方式：</p>
+                        <ol class="mb-0 small">
+                            <li>
+                                <strong>透過瀏覽器設定</strong>：前往瀏覽器的「設定」→「隱私權與安全性」→「清除瀏覽資料」，
+                                勾選「Cookie 和其他網站資料」或「網站資料」後清除。
+                            </li>
+                            <li>
+                                <strong>透過開發者工具</strong>：按 <kbd>F12</kbd> 開啟開發者工具，
+                                前往「Application」（應用程式）分頁 →「Storage」→「Local Storage」，
+                                右鍵點選本網站網址後選擇「Clear」。
+                            </li>
+                            <li>
+                                <strong>透過字典管理頁面</strong>：在「字典管理」頁面中刪除所有關鍵字映射，
+                                或使用清除功能（若有提供）。
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Credits -->
         <section class="about-section">
             <h2><i class="bi bi-people me-2"></i>致謝</h2>

@@ -8,47 +8,31 @@
         </h6>
     </div>
     
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon text-primary">
-                <i class="bi bi-file-text"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">@FormatNumber(SourceLength)</div>
-                <div class="stat-label">原文字元</div>
-            </div>
-        </div>
+    <ul class="stats-list">
+        <li class="stat-item">
+            <i class="bi bi-file-text text-primary"></i>
+            <span class="stat-label">原文字元</span>
+            <span class="stat-value">@FormatNumber(SourceLength)</span>
+        </li>
         
-        <div class="stat-card">
-            <div class="stat-icon text-info">
-                <i class="bi bi-key"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">@FormatNumber(UniqueKeywordCount)</div>
-                <div class="stat-label">不同關鍵字</div>
-            </div>
-        </div>
+        <li class="stat-item">
+            <i class="bi bi-key text-info"></i>
+            <span class="stat-label">不同關鍵字</span>
+            <span class="stat-value">@FormatNumber(UniqueKeywordCount)</span>
+        </li>
         
-        <div class="stat-card">
-            <div class="stat-icon text-warning">
-                <i class="bi bi-hash"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">@FormatNumber(TotalOccurrences)</div>
-                <div class="stat-label">總出現次數</div>
-            </div>
-        </div>
+        <li class="stat-item">
+            <i class="bi bi-hash text-warning"></i>
+            <span class="stat-label">總出現次數</span>
+            <span class="stat-value">@FormatNumber(TotalOccurrences)</span>
+        </li>
         
-        <div class="stat-card">
-            <div class="stat-icon text-success">
-                <i class="bi bi-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value">@FormatNumber(SelectedCount)</div>
-                <div class="stat-label">已選擇</div>
-            </div>
-        </div>
-    </div>
+        <li class="stat-item">
+            <i class="bi bi-check-circle text-success"></i>
+            <span class="stat-label">已選擇</span>
+            <span class="stat-value">@FormatNumber(SelectedCount)</span>
+        </li>
+    </ul>
     
     @if (ShowProgressBar && TotalOccurrences > 0)
     {

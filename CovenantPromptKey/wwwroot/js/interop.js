@@ -302,7 +302,16 @@ window.CovenantPromptKey = {
  * @param {string} mimeType - MIME type
  */
 window.downloadFile = function (filename, content, mimeType) {
-    window.CovenantPromptKey.downloadFile(filename, content, mimeType);
+    window.CovenantPromptKey.downloadFile(filename, content, mimeType || 'text/csv');
+};
+
+/**
+ * Copy to clipboard (global wrapper)
+ * @param {string} text - Text to copy
+ * @returns {Promise<boolean>} - Success status
+ */
+window.copyToClipboard = async function (text) {
+    return await window.CovenantPromptKey.copyToClipboard(text);
 };
 
 /**
