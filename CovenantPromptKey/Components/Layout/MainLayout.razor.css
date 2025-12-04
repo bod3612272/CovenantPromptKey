@@ -35,6 +35,13 @@ article.content {
     align-items: center;
 }
 
+    .top-row .version-text {
+        font-size: 0.75rem;
+        color: #888;
+        margin-right: auto;
+        opacity: 0.8;
+    }
+
     .top-row ::deep a, .top-row ::deep .btn-link {
         white-space: nowrap;
         margin-left: 1.5rem;
