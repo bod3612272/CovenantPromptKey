@@ -24,6 +24,14 @@ namespace CovenantPromptKey
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
+            // Configure SignalR for large message support (FR-033: 支援最多 100,000 字元文本)
+            // 預設 SignalR 訊息大小限制為 32KB，長文本輸入需要更大的緩衝區
+            // 設定為 512KB 以支援最大 100,000 字元 UTF-8 文本（每字元最多 4 bytes）加上 JSON 封裝開銷
+            builder.Services.AddSignalR(options =>
+            {
+                options.MaximumReceiveMessageSize = 512 * 1024; // 512 KB
+            });
+
             // Register application services
             // Singleton services (global state)
             builder.Services.AddSingleton<IDebugLogService, DebugLogService>();
