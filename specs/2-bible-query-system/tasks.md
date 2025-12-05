@@ -31,19 +31,19 @@ Based on plan.md project structure:
 
 **Purpose**: Project initialization, DLL integration, and shared model creation
 
-- [ ] T001 Create `libs/` directory and add BibleData.dll reference
-- [ ] T002 Update `CovenantPromptKey/CovenantPromptKey.csproj` to include BibleData DLL reference
-- [ ] T003 [P] Create directory structure: `Models/Bible/`, `Components/Pages/Bible/`, `Components/Shared/Bible/`
-- [ ] T004 [P] Create enum types in `CovenantPromptKey/Models/Bible/BibleEnums.cs` (FontFamily, TextColor, BackgroundColor, ExportStyle)
-- [ ] T005 [P] Create `CovenantPromptKey/Models/Bible/BibleSettings.cs` model
-- [ ] T006 [P] Create `CovenantPromptKey/Models/Bible/BibleBookmark.cs` model
-- [ ] T007 [P] Create `CovenantPromptKey/Models/Bible/BibleGameRecord.cs` model (BibleGameRecordCollection, BibleGameSession, BibleGameAnswer)
-- [ ] T008 [P] Create `CovenantPromptKey/Models/Bible/BibleWrongAnswer.cs` model (BibleWrongAnswerCollection, WrongAnswerSession, WrongAnswerRecord)
-- [ ] T009 [P] Create `CovenantPromptKey/Models/Bible/BiblePageState.cs` model (BibleSearchPageState, BibleReadPageState, BibleGamePageState)
-- [ ] T010 [P] Create `CovenantPromptKey/Models/Bible/ExportModels.cs` (ExportOptions, ExportRange)
-- [ ] T011 [P] Create `CovenantPromptKey/Models/Bible/SearchResultItem.cs` model
-- [ ] T012 [P] Create `CovenantPromptKey/Models/Bible/BibleGameQuestion.cs` model
-- [ ] T013 [P] Create `CovenantPromptKey/Models/Bible/BibleStyleHelper.cs` static helper class
+- [X] T001 Create `libs/` directory and add BibleData.dll reference
+- [X] T002 Update `CovenantPromptKey/CovenantPromptKey.csproj` to include BibleData DLL reference
+- [X] T003 [P] Create directory structure: `Models/Bible/`, `Components/Pages/Bible/`, `Components/Shared/Bible/`
+- [X] T004 [P] Create enum types in `CovenantPromptKey/Models/Bible/BibleEnums.cs` (FontFamily, TextColor, BackgroundColor, ExportStyle)
+- [X] T005 [P] Create `CovenantPromptKey/Models/Bible/BibleSettings.cs` model
+- [X] T006 [P] Create `CovenantPromptKey/Models/Bible/BibleBookmark.cs` model
+- [X] T007 [P] Create `CovenantPromptKey/Models/Bible/BibleGameRecord.cs` model (BibleGameRecordCollection, BibleGameSession, BibleGameAnswer)
+- [X] T008 [P] Create `CovenantPromptKey/Models/Bible/BibleWrongAnswer.cs` model (BibleWrongAnswerCollection, WrongAnswerSession, WrongAnswerRecord)
+- [X] T009 [P] Create `CovenantPromptKey/Models/Bible/BiblePageState.cs` model (BibleSearchPageState, BibleReadPageState, BibleGamePageState)
+- [X] T010 [P] Create `CovenantPromptKey/Models/Bible/ExportModels.cs` (ExportOptions, ExportRange)
+- [X] T011 [P] Create `CovenantPromptKey/Models/Bible/SearchResultItem.cs` model
+- [X] T012 [P] Create `CovenantPromptKey/Models/Bible/BibleGameQuestion.cs` model
+- [X] T013 [P] Create `CovenantPromptKey/Models/Bible/BibleStyleHelper.cs` static helper class
 
 ---
 
@@ -53,16 +53,16 @@ Based on plan.md project structure:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T014 Register `BibleIndex` as Singleton in `CovenantPromptKey/Program.cs`
-- [ ] T015 [P] Create `CovenantPromptKey/Services/Interfaces/IBibleSettingsService.cs` interface
-- [ ] T016 [P] Create `CovenantPromptKey/Services/Interfaces/IBiblePageStateService.cs` interface
-- [ ] T017 Create `CovenantPromptKey/Services/Implementations/BibleSettingsService.cs` implementation (depends on ISessionStorageService)
-- [ ] T018 Create `CovenantPromptKey/Services/Implementations/BiblePageStateService.cs` implementation (depends on ISessionStorageService)
-- [ ] T019 Register Bible settings and page state services in `CovenantPromptKey/Program.cs`
-- [ ] T020 [P] Create `CovenantPromptKey/wwwroot/css/bible.css` base stylesheet
-- [ ] T021 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleSubNavigation.razor` component
-- [ ] T022 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleSettingsPanel.razor` component
-- [ ] T023 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleVerseDisplay.razor` component
+- [X] T014 Register `BibleIndex` as Singleton in `CovenantPromptKey/Program.cs`
+- [X] T015 [P] Create `CovenantPromptKey/Services/Interfaces/IBibleSettingsService.cs` interface
+- [X] T016 [P] Create `CovenantPromptKey/Services/Interfaces/IBiblePageStateService.cs` interface
+- [X] T017 Create `CovenantPromptKey/Services/Implementations/BibleSettingsService.cs` implementation (depends on ISessionStorageService)
+- [X] T018 Create `CovenantPromptKey/Services/Implementations/BiblePageStateService.cs` implementation (depends on ISessionStorageService)
+- [X] T019 Register Bible settings and page state services in `CovenantPromptKey/Program.cs`
+- [X] T020 [P] Create `CovenantPromptKey/wwwroot/css/bible.css` base stylesheet
+- [X] T021 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleSubNavigation.razor` component
+- [X] T022 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleSettingsPanel.razor` component
+- [X] T023 [P] Create `CovenantPromptKey/Components/Shared/Bible/BibleVerseDisplay.razor` component
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -76,14 +76,14 @@ Based on plan.md project structure:
 
 ### Tests for User Story 7
 
-- [ ] T024 [P] [US7] Create `CovenantPromptKey.Tests/Services/BibleSettingsServiceTests.cs` unit tests
-- [ ] T025 [P] [US7] Create `CovenantPromptKey.Tests/Services/BiblePageStateServiceTests.cs` unit tests
+- [X] T024 [P] [US7] Create `CovenantPromptKey.Tests/Services/BibleSettingsServiceTests.cs` unit tests
+- [X] T025 [P] [US7] Create `CovenantPromptKey.Tests/Services/BiblePageStateServiceTests.cs` unit tests
 
 ### Implementation for User Story 7
 
-- [ ] T026 [US7] Update `CovenantPromptKey/Components/Layout/NavMenu.razor` to add "聖經" expandable menu with sub-items
-- [ ] T027 [US7] Create `CovenantPromptKey/Components/Pages/Bible/BibleHomePage.razor` (route: /bible)
-- [ ] T028 [US7] Create `CovenantPromptKey/Components/Pages/Bible/BibleHomePage.razor.css` styles
+- [X] T026 [US7] Update `CovenantPromptKey/Components/Layout/NavMenu.razor` to add "聖經" expandable menu with sub-items
+- [X] T027 [US7] Create `CovenantPromptKey/Components/Pages/Bible/BibleHomePage.razor` (route: /bible)
+- [X] T028 [US7] Create `CovenantPromptKey/Components/Pages/Bible/BibleHomePage.razor.css` styles
 
 **Checkpoint**: At this point, User Story 7 should be fully functional - users can navigate to Bible section
 
@@ -97,18 +97,18 @@ Based on plan.md project structure:
 
 ### Tests for User Story 1
 
-- [ ] T029 [P] [US1] Create `CovenantPromptKey.Tests/Services/BibleSearchServiceTests.cs` unit tests
+- [X] T029 [P] [US1] Create `CovenantPromptKey.Tests/Services/BibleSearchServiceTests.cs` unit tests
 
 ### Implementation for User Story 1
 
-- [ ] T030 [P] [US1] Create `CovenantPromptKey/Services/Interfaces/IBibleSearchService.cs` interface
-- [ ] T031 [US1] Create `CovenantPromptKey/Services/Implementations/BibleSearchService.cs` implementation (depends on BibleIndex)
-- [ ] T032 [US1] Register IBibleSearchService in `CovenantPromptKey/Program.cs`
-- [ ] T033 [P] [US1] Create `CovenantPromptKey/Components/Shared/Bible/BibleSearchResults.razor` component
-- [ ] T034 [US1] Create `CovenantPromptKey/Components/Pages/Bible/BibleSearchPage.razor` (route: /bible/search)
-- [ ] T035 [US1] Create `CovenantPromptKey/Components/Pages/Bible/BibleSearchPage.razor.css` styles
-- [ ] T036 [US1] Implement debounce search with CancellationToken in BibleSearchPage.razor (250ms delay)
-- [ ] T037 [US1] Implement keyword highlighting in search results
+- [X] T030 [P] [US1] Create `CovenantPromptKey/Services/Interfaces/IBibleSearchService.cs` interface
+- [X] T031 [US1] Create `CovenantPromptKey/Services/Implementations/BibleSearchService.cs` implementation (depends on BibleIndex)
+- [X] T032 [US1] Register IBibleSearchService in `CovenantPromptKey/Program.cs`
+- [X] T033 [P] [US1] Create `CovenantPromptKey/Components/Shared/Bible/BibleSearchResults.razor` component
+- [X] T034 [US1] Create `CovenantPromptKey/Components/Pages/Bible/BibleSearchPage.razor` (route: /bible/search)
+- [X] T035 [US1] Create `CovenantPromptKey/Components/Pages/Bible/BibleSearchPage.razor.css` styles
+- [X] T036 [US1] Implement debounce search with CancellationToken in BibleSearchPage.razor (250ms delay)
+- [X] T037 [US1] Implement keyword highlighting in search results
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can search and find verses
 
@@ -122,19 +122,19 @@ Based on plan.md project structure:
 
 ### Tests for User Story 2
 
-- [ ] T038 [P] [US2] Create `CovenantPromptKey.Tests/Services/BibleReadingServiceTests.cs` unit tests
+- [X] T038 [P] [US2] Create `CovenantPromptKey.Tests/Services/BibleReadingServiceTests.cs` unit tests
 
 ### Implementation for User Story 2
 
-- [ ] T039 [P] [US2] Create `CovenantPromptKey/Services/Interfaces/IBibleReadingService.cs` interface
-- [ ] T040 [US2] Create `CovenantPromptKey/Services/Implementations/BibleReadingService.cs` implementation (depends on BibleIndex)
-- [ ] T041 [US2] Register IBibleReadingService in `CovenantPromptKey/Program.cs`
-- [ ] T042 [P] [US2] Create `CovenantPromptKey/Components/Shared/Bible/BibleBookSelector.razor` component
-- [ ] T043 [P] [US2] Create `CovenantPromptKey/Components/Shared/Bible/BibleChapterNavigator.razor` component
-- [ ] T044 [US2] Create `CovenantPromptKey/Components/Pages/Bible/BibleReadPage.razor` (routes: /bible/read, /bible/read/{BookNumber:int}/{ChapterNumber:int})
-- [ ] T045 [US2] Create `CovenantPromptKey/Components/Pages/Bible/BibleReadPage.razor.css` styles
-- [ ] T046 [US2] Implement chapter navigation (prev/next) and direct jump in BibleReadPage.razor
-- [ ] T047 [US2] Implement page state persistence (restore last read position) in BibleReadPage.razor
+- [X] T039 [P] [US2] Create `CovenantPromptKey/Services/Interfaces/IBibleReadingService.cs` interface
+- [X] T040 [US2] Create `CovenantPromptKey/Services/Implementations/BibleReadingService.cs` implementation (depends on BibleIndex)
+- [X] T041 [US2] Register IBibleReadingService in `CovenantPromptKey/Program.cs`
+- [X] T042 [P] [US2] Create `CovenantPromptKey/Components/Shared/Bible/BibleBookSelector.razor` component
+- [X] T043 [P] [US2] Create `CovenantPromptKey/Components/Shared/Bible/BibleChapterNavigator.razor` component
+- [X] T044 [US2] Create `CovenantPromptKey/Components/Pages/Bible/BibleReadPage.razor` (routes: /bible/read, /bible/read/{BookNumber:int}/{ChapterNumber:int})
+- [X] T045 [US2] Create `CovenantPromptKey/Components/Pages/Bible/BibleReadPage.razor.css` styles
+- [X] T046 [US2] Implement chapter navigation (prev/next) and direct jump in BibleReadPage.razor
+- [X] T047 [US2] Implement page state persistence (restore last read position) in BibleReadPage.razor
 
 **Checkpoint**: At this point, User Stories 1, 2, and 7 should all work independently - MVP complete
 

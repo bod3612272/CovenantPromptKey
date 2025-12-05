@@ -1,0 +1,29 @@
+/* BibleHomePage 專用樣式 */
+
+/* 主容器調整 */
+::deep .bible-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 首頁卡片樣式增強 */
+::deep .bible-home-cards {
+    margin-top: 1rem;
+}
+
+::deep .bible-home-card {
+    display: block;
+}
+
+::deep .bible-home-card-icon i {
+    font-size: 2.5rem;
+}
+
+/* 最近閱讀區塊 */
+::deep .bible-bookmark-item {
+    color: inherit;
+}
+
+::deep .bible-bookmark-item:hover {
+    text-decoration: none;
+}

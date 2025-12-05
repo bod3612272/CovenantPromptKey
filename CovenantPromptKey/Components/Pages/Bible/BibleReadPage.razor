@@ -1,0 +1,312 @@
+@page "/bible/read"
+@page "/bible/read/{BookNumber:int}/{ChapterNumber:int}"
+@rendermode InteractiveServer
+
+<PageTitle>聖經閱讀 - CovenantPromptKey</PageTitle>
+
+<link href="css/bible.css" rel="stylesheet" />
+
+<div class="bible-container">
+    <div class="bible-page-header">
+        <h1 class="bible-page-title">
+            <i class="bi bi-book me-2"></i>聖經閱讀
+        </h1>
+    </div>
+
+    <BibleSubNavigation />
+
+    <!-- 書卷/章節選擇器 -->
+    <div class="mb-4">
+        <BibleBookSelector 
+            BookNumber="@currentBookNumber" 
+            ChapterNumber="@currentChapterNumber"
+            OnSelectionChanged="OnSelectionChanged"
+            ShowQuickAccess="true" />
+    </div>
+
+    <!-- 設定面板（可摺疊） -->
+    <div class="mb-4">
+        <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="ToggleSettings">
+            <i class="bi @(showSettings ? "bi-chevron-up" : "bi-chevron-down") me-1"></i>
+            顯示設定
+        </button>
+        @if (showSettings)
+        {
+            <div class="mt-2">
+                <BibleSettingsPanel Settings="@settings" SettingsChanged="OnSettingsChanged" ShowResetButton="true" />
+            </div>
+        }
+    </div>
+
+    <!-- 章節導航（上方） -->
+    <div class="mb-3">
+        <BibleChapterNavigator 
+            ChapterTitle="@chapterTitle"
+            HasPrevious="@hasPreviousChapter"
+            HasNext="@hasNextChapter"
+            PreviousTitle="@previousChapterTitle"
+            NextTitle="@nextChapterTitle"
+            OnPrevious="GoToPreviousChapter"
+            OnNext="GoToNextChapter" />
+    </div>
+
+    <!-- 經文內容 -->
+    @if (isLoading)
+    {
+        <div class="bible-loading">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            載入經文中...
+        </div>
+    }
+    else if (verses != null && verses.Any())
+    {
+        <div class="bible-verses-container" @ref="versesContainer">
+            @foreach (var verse in verses)
+            {
+                <BibleVerseDisplay 
+                    Verse="@verse" 
+                    Settings="@settings"
+                    IsHighlighted="@(verse.VerseNumber == highlightedVerseNumber)" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="bible-empty-state">
+            <div class="bible-empty-state-icon">
+                <i class="bi bi-book"></i>
+            </div>
+            <p>無法載入經文</p>
+            <p class="text-muted small">請嘗試選擇其他章節</p>
+        </div>
+    }
+
+    <!-- 章節導航（下方） -->
+    @if (verses != null && verses.Any())
+    {
+        <div class="mt-4">
+            <BibleChapterNavigator 
+                ChapterTitle="@chapterTitle"
+                HasPrevious="@hasPreviousChapter"
+                HasNext="@hasNextChapter"
+                PreviousTitle="@previousChapterTitle"
+                NextTitle="@nextChapterTitle"
+                OnPrevious="GoToPreviousChapter"
+                OnNext="GoToNextChapter" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int BookNumber { get; set; }
+
+    [Parameter]
+    public int ChapterNumber { get; set; }
+
+    [Inject]
+    private IBibleReadingService? ReadingService { get; set; }
+
+    [Inject]
+    private IBibleSettingsService? SettingsService { get; set; }
+
+    [Inject]
+    private IBiblePageStateService? PageStateService { get; set; }
+
+    [Inject]
+    private IBibleBookmarkService? BookmarkService { get; set; }
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    private int currentBookNumber = 1;
+    private int currentChapterNumber = 1;
+    private int? highlightedVerseNumber;
+    private List<BibleData.VerseWithLocation>? verses;
+    private BibleSettings settings = new();
+    private bool isLoading = false;
+    private bool showSettings = false;
+    private ElementReference versesContainer;
+
+    // 導航相關
+    private string chapterTitle = "";
+    private bool hasPreviousChapter;
+    private bool hasNextChapter;
+    private string? previousChapterTitle;
+    private string? nextChapterTitle;
+
+    protected override void OnInitialized()
+    {
+        // 從 URL 參數初始化
+        if (BookNumber > 0)
+        {
+            currentBookNumber = BookNumber;
+        }
+        if (ChapterNumber > 0)
+        {
+            currentChapterNumber = ChapterNumber;
+        }
+
+        // 解析 query string 中的 verse 參數
+        var uri = NavigationManager?.ToAbsoluteUri(NavigationManager.Uri);
+        if (uri != null && System.Web.HttpUtility.ParseQueryString(uri.Query)["verse"] is string verseStr 
+            && int.TryParse(verseStr, out var verseNum))
+        {
+            highlightedVerseNumber = verseNum;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // 當路由參數變更時更新
+        if (BookNumber > 0 && ChapterNumber > 0)
+        {
+            currentBookNumber = BookNumber;
+            currentChapterNumber = ChapterNumber;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 載入設定
+            if (SettingsService != null)
+            {
+                settings = await SettingsService.LoadSettingsAsync();
+            }
+
+            // 如果沒有 URL 參數，從頁面狀態載入
+            if (BookNumber == 0 && ChapterNumber == 0 && PageStateService != null)
+            {
+                var state = await PageStateService.LoadReadPageStateAsync();
+                currentBookNumber = state.BookNumber > 0 ? state.BookNumber : 1;
+                currentChapterNumber = state.ChapterNumber > 0 ? state.ChapterNumber : 1;
+            }
+
+            await LoadChapter();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadChapter()
+    {
+        isLoading = true;
+
+        try
+        {
+            if (ReadingService != null)
+            {
+                verses = ReadingService.GetChapterVerses(currentBookNumber, currentChapterNumber);
+                chapterTitle = ReadingService.GetChapterTitle(currentBookNumber, currentChapterNumber);
+
+                // 計算上下章資訊
+                var prev = ReadingService.GetPreviousChapter(currentBookNumber, currentChapterNumber);
+                hasPreviousChapter = prev.HasValue;
+                previousChapterTitle = prev.HasValue 
+                    ? ReadingService.GetChapterTitle(prev.Value.BookNumber, prev.Value.ChapterNumber) 
+                    : null;
+
+                var next = ReadingService.GetNextChapter(currentBookNumber, currentChapterNumber);
+                hasNextChapter = next.HasValue;
+                nextChapterTitle = next.HasValue 
+                    ? ReadingService.GetChapterTitle(next.Value.BookNumber, next.Value.ChapterNumber) 
+                    : null;
+            }
+
+            // 儲存頁面狀態
+            await SavePageState();
+
+            // 自動加入書籤
+            await AddBookmark();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSelectionChanged((int BookNumber, int ChapterNumber) selection)
+    {
+        currentBookNumber = selection.BookNumber;
+        currentChapterNumber = selection.ChapterNumber;
+        highlightedVerseNumber = null;
+        await LoadChapter();
+
+        // 更新 URL
+        UpdateUrl();
+    }
+
+    private async Task GoToPreviousChapter()
+    {
+        if (ReadingService == null) return;
+
+        var prev = ReadingService.GetPreviousChapter(currentBookNumber, currentChapterNumber);
+        if (prev.HasValue)
+        {
+            currentBookNumber = prev.Value.BookNumber;
+            currentChapterNumber = prev.Value.ChapterNumber;
+            highlightedVerseNumber = null;
+            await LoadChapter();
+            UpdateUrl();
+        }
+    }
+
+    private async Task GoToNextChapter()
+    {
+        if (ReadingService == null) return;
+
+        var next = ReadingService.GetNextChapter(currentBookNumber, currentChapterNumber);
+        if (next.HasValue)
+        {
+            currentBookNumber = next.Value.BookNumber;
+            currentChapterNumber = next.Value.ChapterNumber;
+            highlightedVerseNumber = null;
+            await LoadChapter();
+            UpdateUrl();
+        }
+    }
+
+    private void UpdateUrl()
+    {
+        NavigationManager?.NavigateTo($"/bible/read/{currentBookNumber}/{currentChapterNumber}", replace: true);
+    }
+
+    private void ToggleSettings()
+    {
+        showSettings = !showSettings;
+    }
+
+    private async Task OnSettingsChanged(BibleSettings newSettings)
+    {
+        settings = newSettings;
+        if (SettingsService != null)
+        {
+            await SettingsService.SaveSettingsAsync(settings);
+        }
+    }
+
+    private async Task SavePageState()
+    {
+        if (PageStateService != null)
+        {
+            await PageStateService.SaveReadPageStateAsync(new BibleReadPageState
+            {
+                BookNumber = currentBookNumber,
+                ChapterNumber = currentChapterNumber,
+                ScrollPosition = 0
+            });
+        }
+    }
+
+    private async Task AddBookmark()
+    {
+        if (BookmarkService != null && ReadingService != null)
+        {
+            var bookName = ReadingService.GetBookName(currentBookNumber);
+            await BookmarkService.AddBookmarkAsync(currentBookNumber, bookName, currentChapterNumber);
+        }
+    }
+}

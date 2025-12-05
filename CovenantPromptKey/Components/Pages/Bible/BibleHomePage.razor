@@ -1,0 +1,115 @@
+@page "/bible"
+@rendermode InteractiveServer
+
+<PageTitle>聖經 - CovenantPromptKey</PageTitle>
+
+<link href="css/bible.css" rel="stylesheet" />
+
+<div class="bible-container">
+    <div class="bible-page-header">
+        <h1 class="bible-page-title">
+            <i class="bi bi-book me-2"></i>聖經
+        </h1>
+    </div>
+
+    <BibleSubNavigation />
+
+    <div class="bible-home-cards">
+        <a href="/bible/search" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-search"></i>
+            </div>
+            <div class="bible-home-card-title">聖經查詢</div>
+            <div class="bible-home-card-desc">
+                輸入關鍵字搜尋經文，支援即時搜尋建議與多關鍵字查詢
+            </div>
+        </a>
+
+        <a href="/bible/read" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <div class="bible-home-card-title">聖經閱讀</div>
+            <div class="bible-home-card-desc">
+                選擇書卷章節進行閱讀，支援書籤與閱讀記錄
+            </div>
+        </a>
+
+        <a href="/bible/game" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-controller"></i>
+            </div>
+            <div class="bible-home-card-title">聖經遊戲</div>
+            <div class="bible-home-card-desc">
+                經文猜猜遊戲，測試您對聖經的熟悉程度
+            </div>
+        </a>
+    </div>
+
+    @if (recentBookmarks.Any())
+    {
+        <div class="mt-4">
+            <h5 class="mb-3">
+                <i class="bi bi-clock-history me-2"></i>最近閱讀
+            </h5>
+            <div class="bible-bookmark-list">
+                @foreach (var bookmark in recentBookmarks.Take(5))
+                {
+                    <a href="/bible/read/@bookmark.BookNumber/@bookmark.ChapterNumber" class="bible-bookmark-item text-decoration-none">
+                        <span class="bible-bookmark-reference">@bookmark.DisplayReference</span>
+                        <span class="bible-bookmark-date">@bookmark.CreatedAt.ToLocalTime().ToString("MM/dd HH:mm")</span>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="mt-4 p-3 bg-light rounded">
+        <h5 class="mb-2">
+            <i class="bi bi-info-circle me-2"></i>關於聖經資料
+        </h5>
+        <p class="mb-1 text-muted small">
+            本系統使用和合本聖經，包含舊約 39 卷、新約 27 卷，共 66 卷書。
+        </p>
+        <p class="mb-0 text-muted small">
+            總計 @totalChapters 章、@totalVerses 節經文。
+        </p>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IBibleBookmarkService? BookmarkService { get; set; }
+
+    [Inject]
+    private BibleIndex? BibleIndex { get; set; }
+
+    private List<BibleBookmark> recentBookmarks = new();
+    private int totalChapters = 0;
+    private int totalVerses = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (BibleIndex != null)
+        {
+            totalChapters = BibleIndex.TotalChapters;
+            totalVerses = BibleIndex.TotalVerses;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && BookmarkService != null)
+        {
+            try
+            {
+                recentBookmarks = await BookmarkService.LoadBookmarksAsync();
+                StateHasChanged();
+            }
+            catch
+            {
+                // Ignore errors during bookmark loading
+            }
+        }
+    }
+}

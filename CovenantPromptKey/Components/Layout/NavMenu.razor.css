@@ -108,3 +108,55 @@
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
+
+/* 聖經摺疊選單樣式 */
+.nav-group-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #d7d7d7;
+    border-radius: 4px;
+    height: 3rem;
+    line-height: 3rem;
+}
+
+.nav-group-toggle:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.nav-group-toggle.expanded {
+    background-color: rgba(255,255,255,0.15);
+    color: white;
+}
+
+.toggle-icon {
+    margin-left: auto;
+    width: 1rem !important;
+    margin-right: 0 !important;
+}
+
+.nav-group-items {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    margin: 0.25rem 0.75rem;
+    padding: 0.25rem 0;
+}
+
+.nav-group-items .nav-item {
+    padding-bottom: 0.25rem;
+}
+
+.nav-group-items .nav-item:first-of-type {
+    padding-top: 0.25rem;
+}
+
+.nav-group-items .nav-item:last-of-type {
+    padding-bottom: 0.25rem;
+}
+
+.nav-group-items ::deep .nav-link {
+    height: 2.5rem;
+    line-height: 2.5rem;
+    font-size: 0.85rem;
+}
