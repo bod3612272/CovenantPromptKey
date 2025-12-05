@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/2-bible-query-system/`  
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅
 
-**Tests**: 依據 plan.md 規範，新功能將包含單元測試（服務測試覆蓋率 ≥ 50%）
+**Tests**: 依據 plan.md 規範，新功能將包含單元測試（NUnit 4.x + NSubstitute + FluentAssertions，服務測試覆蓋率 ≥ 50%）
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 

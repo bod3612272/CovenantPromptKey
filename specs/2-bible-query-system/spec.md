@@ -159,10 +159,10 @@
 
 - **FR-010**: 系統 MUST 支援使用者輸入關鍵字進行經文搜尋，回傳包含該關鍵字的經文列表
 - **FR-011**: 系統 MUST 於搜尋結果中顯示經文所在的書卷、章節及節數
-- **FR-012**: 系統 MUST 支援模糊搜尋功能
+- **FR-012**: 系統 MUST 支援模糊搜尋功能（採用 BibleData DLL 內建的 partial matching，支援關鍵字部分匹配）
 - **FR-013**: 系統 MUST 支援多關鍵字搜尋功能（AND 邏輯）
 - **FR-014**: 系統 MUST 提供即時搜尋建議，使用者輸入時即時顯示相關經文
-- **FR-015**: 系統 MUST 將搜尋結果依相關性排序
+- **FR-015**: 系統 MUST 將搜尋結果依相關性排序（使用 BibleData 內建 SearchTopRanked 方法，依關鍵字出現位置與次數計算分數）
 - **FR-016**: 系統 MUST 提供搜尋結果分頁功能
 - **FR-017**: 系統 MUST 提供經文自動換行選項
 
@@ -219,10 +219,10 @@
 ### Key Entities
 
 - **BibleSettings（聖經設定）**: 儲存使用者的顯示偏好設定，包含字形、字體大小、文字顏色、背景顏色、自動換行等屬性
-- **Bookmark（書籤）**: 記錄使用者閱讀的經文位置，包含書卷、章節、時間戳記等屬性，上限 10 筆
-- **GameRecord（遊戲記錄）**: 記錄遊戲分數與時間，包含分數、遊戲時間、答題詳情等屬性
-- **WrongAnswerRecord（錯題記錄）**: 記錄使用者答錯的題目，包含經文內容、經文出處、使用者選擇的答案、正確答案及遊戲時間戳記，保留最近 5 次遊戲的錯題（最多 50 題）
-- **PageState（頁面狀態）**: 記憶各聖經頁面的當前狀態，於工作階段期間維持
+- **BibleBookmark（書籤）**: 記錄使用者閱讀的經文位置，包含書卷、章節、時間戳記等屬性，上限 10 筆
+- **BibleGameRecord（遊戲記錄）**: 記錄遊戲分數與時間，包含分數、遊戲時間、答題詳情等屬性（實作為 BibleGameRecordCollection + BibleGameSession）
+- **BibleWrongAnswerRecord（錯題記錄）**: 記錄使用者答錯的題目，包含經文內容、經文出處、使用者選擇的答案、正確答案及遊戲時間戳記，保留最近 5 次遊戲的錯題（最多 50 題，實作為 BibleWrongAnswerCollection + WrongAnswerSession + WrongAnswerRecord）
+- **BiblePageState（頁面狀態）**: 記憶各聖經頁面的當前狀態，於工作階段期間維持（實作為 BibleSearchPageState、BibleReadPageState、BibleGamePageState）
 
 ## Success Criteria *(mandatory)*
 

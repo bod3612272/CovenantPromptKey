@@ -20,7 +20,7 @@
 - Markdig (Markdown 解析，現有依賴)
 
 **Storage**: Browser localStorage (設定/書籤/遊戲記錄持久化) + sessionStorage (頁面狀態)  
-**Testing**: xUnit + NSubstitute（沿用現有測試框架）；新增服務單元測試覆蓋率 ≥ 50%；前端 UI 採手動驗證  
+**Testing**: NUnit 4.x + NSubstitute + FluentAssertions（遵循 Constitution VII 規範）；新增服務單元測試覆蓋率 ≥ 50%；前端 UI 採手動驗證  
 **Target Platform**: Windows (Chromium-based browsers: Chrome, Edge)  
 **Project Type**: Web Application (Single Project - Blazor Server，擴展現有架構)  
 **Performance Goals**: 
@@ -181,7 +181,7 @@ CovenantPromptKey.Tests/
 | **IV. Technology Stack Stability** | ✅ PASS | 維持 .NET 10.0，BibleData (.NET Standard 2.1) 完全相容 |
 | **V. Change Classification** | ✅ PASS | 所有變更屬於「Feature Addition」許可類別 |
 | **VI. Code Quality Excellence** | ✅ PASS | Service 介面遵循 SOLID，使用 DI 與 Nullable Reference Types |
-| **VII. Testing Discipline** | ✅ PASS | 已規劃 5 個服務測試檔案，將使用 xUnit + NSubstitute（沿用現有框架） |
+| **VII. Testing Discipline** | ✅ PASS | 已規劃 5 個服務測試檔案，將使用 NUnit 4.x + NSubstitute + FluentAssertions（遵循 Constitution） |
 | **VIII. User Experience Consistency** | ✅ PASS | UI 元件沿用 Bootstrap 5，導航模式與現有一致 |
 | **IX. Performance Requirements** | ✅ PASS | 使用 BibleIndex O(1) 查詢，防抖動搜尋，符合效能目標 |
 | **X. Documentation Synchronisation** | ⏳ PENDING | 功能完成後須更新 docs/getting-started.md |
