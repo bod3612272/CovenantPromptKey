@@ -2,7 +2,7 @@
 
 /* 經文容器 */
 ::deep .bible-verses-container {
-    max-height: 60vh;
+    max-height: 90vh;
     overflow-y: auto;
     padding: 1rem;
     background-color: var(--bs-body-bg);

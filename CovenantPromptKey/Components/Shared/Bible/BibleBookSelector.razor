@@ -1,48 +1,44 @@
 @using CovenantPromptKey.Services.Interfaces
 
 <div class="bible-book-selector">
-    <div class="row g-2">
-        <div class="col-md-6">
-            <label class="form-label">書卷</label>
-            <select class="form-select" @bind="selectedBookNumber" @bind:after="OnBookChanged">
-                @foreach (var (name, index) in GetBookOptions())
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">書卷</label>
+            <select class="form-select form-select-sm" style="width: auto;" value="@selectedBookNumber" @onchange="OnBookSelectChanged">
+                @if (_bookNames != null)
                 {
-                    <option value="@index">@name</option>
+                    @foreach (var (name, index) in GetBookOptions())
+                    {
+                        <option value="@index">@name</option>
+                    }
                 }
             </select>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">章節</label>
-            <select class="form-select" @bind="selectedChapterNumber" @bind:after="OnChapterChanged">
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">章節</label>
+            <select class="form-select form-select-sm" style="width: auto;" value="@selectedChapterNumber" @onchange="OnChapterSelectChanged">
                 @for (int i = 1; i <= ChapterCount; i++)
                 {
                     <option value="@i">第 @i 章</option>
                 }
             </select>
         </div>
-    </div>
-    
-    @if (ShowQuickAccess)
-    {
-        <div class="mt-3">
-            <div class="btn-group" role="group" aria-label="快捷選擇">
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(1, 1)" title="創世記">創</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(19, 1)" title="詩篇">詩</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(20, 1)" title="箴言">箴</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(40, 1)" title="馬太福音">太</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(43, 1)" title="約翰福音">約</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(45, 1)" title="羅馬書">羅</button>
-                <button type="button" class="btn btn-sm btn-outline-primary" 
-                        @onclick="() => SelectBook(66, 1)" title="啟示錄">啟</button>
+        @if (ShowQuickAccess)
+        {
+            <div class="btn-group flex-nowrap" role="group" aria-label="快捷選擇">
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(1, 1)" title="創世記">創</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(19, 1)" title="詩篇">詩</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(20, 1)" title="箴言">箴</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(23, 1)" title="以賽亞書">賽</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(40, 1)" title="馬太福音">太</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(43, 1)" title="約翰福音">約</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(44, 1)" title="使徒行傳">徒</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(45, 1)" title="羅馬書">羅</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(58, 1)" title="希伯來書">來</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(66, 1)" title="啟示錄">啟</button>
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @code {
@@ -66,33 +62,23 @@
     private int ChapterCount => ReadingService?.GetChapterCount(selectedBookNumber) ?? 1;
 
     private List<string>? _bookNames;
-    private bool _initialized = false;
 
     protected override void OnInitialized()
     {
+        _bookNames = ReadingService?.GetAllBookNames();
         selectedBookNumber = BookNumber > 0 ? BookNumber : 1;
         selectedChapterNumber = ChapterNumber > 0 ? ChapterNumber : 1;
     }
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender && !_initialized)
-        {
-            _bookNames = ReadingService?.GetAllBookNames();
-            _initialized = true;
-            StateHasChanged();
-        }
-    }
-
     protected override void OnParametersSet()
     {
-        if (BookNumber > 0 && ChapterNumber > 0)
+        if (BookNumber > 0 && BookNumber != selectedBookNumber)
         {
-            if (selectedBookNumber != BookNumber || selectedChapterNumber != ChapterNumber)
-            {
-                selectedBookNumber = BookNumber;
-                selectedChapterNumber = ChapterNumber;
-            }
+            selectedBookNumber = BookNumber;
+        }
+        if (ChapterNumber > 0 && ChapterNumber != selectedChapterNumber)
+        {
+            selectedChapterNumber = ChapterNumber;
         }
     }
 
@@ -107,19 +93,24 @@
         }
     }
 
-    private async Task OnBookChanged()
+    private async Task OnBookSelectChanged(ChangeEventArgs e)
     {
-        // 書卷變更時，章節重設為 1
-        if (selectedChapterNumber > ChapterCount)
+        if (int.TryParse(e.Value?.ToString(), out var bookNumber))
         {
+            selectedBookNumber = bookNumber;
+            // 書卷變更時，章節重設為 1
             selectedChapterNumber = 1;
+            await NotifyChange();
         }
-        await NotifyChange();
     }
 
-    private async Task OnChapterChanged()
+    private async Task OnChapterSelectChanged(ChangeEventArgs e)
     {
-        await NotifyChange();
+        if (int.TryParse(e.Value?.ToString(), out var chapterNumber))
+        {
+            selectedChapterNumber = chapterNumber;
+            await NotifyChange();
+        }
     }
 
     private async Task SelectBook(int bookNumber, int chapterNumber)
