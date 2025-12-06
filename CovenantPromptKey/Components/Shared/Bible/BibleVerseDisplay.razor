@@ -3,20 +3,22 @@
 @* 支援單個經文或多個經文的顯示 *@
 @if (Verse != null)
 {
-    <div class="bible-verse-line @(IsHighlighted ? "bible-verse-highlighted" : "")" style="@GetLineStyle()">
-        <span class="bible-verse-number" style="color: @GetPrimaryColor();">
-            @Verse.VerseNumber
-        </span>
-        <span class="bible-verse-content">
-            @if (!string.IsNullOrEmpty(HighlightKeyword))
-            {
-                @((MarkupString)HighlightText(Verse.Content))
-            }
-            else
-            {
-                @Verse.Content
-            }
-        </span>
+    <div class="bible-verse-wrapper" style="@GetWrapperStyle()">
+        <div class="bible-verse-line @(IsHighlighted ? "bible-verse-highlighted" : "")" style="@GetLineStyle()">
+            <span class="bible-verse-number" style="color: @GetPrimaryColor();">
+                @Verse.VerseNumber
+            </span>
+            <span class="bible-verse-content">
+                @if (!string.IsNullOrEmpty(HighlightKeyword))
+                {
+                    @((MarkupString)HighlightText(Verse.Content))
+                }
+                else
+                {
+                    @Verse.Content
+                }
+            </span>
+        </div>
     </div>
 }
 else if (Verses != null && Verses.Any())
@@ -24,7 +26,7 @@ else if (Verses != null && Verses.Any())
     <div class="bible-verse-container" style="@GetContainerStyle()">
         @foreach (var verse in Verses)
         {
-            <div class="bible-verse-line">
+            <div class="bible-verse-line" style="@GetLineStyle()">
                 <span class="bible-verse-number" style="color: @GetPrimaryColor();">
                     @verse.VerseNumber
                 </span>
@@ -80,15 +82,20 @@ else
     [Parameter]
     public bool IsHighlighted { get; set; }
 
+    private string GetWrapperStyle()
+    {
+        var bgColor = BibleStyleHelper.GetBackgroundColorHex(Settings.BackgroundColor);
+        return $"background-color: {bgColor}; padding: 0.25rem 0;";
+    }
+
     private string GetLineStyle()
     {
         var fontFamily = BibleStyleHelper.GetFontFamilyCss(Settings.FontFamily);
-        var bgColor = BibleStyleHelper.GetBackgroundColorHex(Settings.BackgroundColor);
         var textColor = Settings.BackgroundColor == BackgroundColor.NightMode 
             ? "#FFFFFF" 
             : BibleStyleHelper.GetTextColorHex(Settings.TextColor);
 
-        return $"font-family: {fontFamily}; font-size: {Settings.FontSize}px; background-color: {bgColor}; color: {textColor};";
+        return $"font-family: {fontFamily}; font-size: {Settings.FontSize}px; color: {textColor};";
     }
 
     private string GetContainerStyle()

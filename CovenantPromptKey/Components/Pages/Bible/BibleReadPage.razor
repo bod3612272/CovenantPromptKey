@@ -1,6 +1,7 @@
 @page "/bible/read"
 @page "/bible/read/{BookNumber:int}/{ChapterNumber:int}"
 @rendermode InteractiveServer
+@using CovenantPromptKey.Models.Bible
 
 <PageTitle>聖經閱讀 - CovenantPromptKey</PageTitle>
 
@@ -30,16 +31,41 @@
             <i class="bi @(showSettings ? "bi-chevron-up" : "bi-chevron-down") me-1"></i>
             顯示設定
         </button>
+        <button class="btn btn-sm btn-outline-secondary ms-2" type="button" @onclick="ToggleBookmarks">
+            <i class="bi @(showBookmarks ? "bi-chevron-up" : "bi-chevron-down") me-1"></i>
+            閱讀記錄
+            @if (bookmarks.Any())
+            {
+                <span class="badge bg-secondary ms-1">@bookmarks.Count</span>
+            }
+        </button>
         @if (showSettings)
         {
             <div class="mt-2">
                 <BibleSettingsPanel Settings="@settings" SettingsChanged="OnSettingsChanged" ShowResetButton="true" />
             </div>
         }
+        @if (showBookmarks)
+        {
+            <div class="mt-2">
+                <BibleBookmarkList 
+                    Bookmarks="@bookmarks"
+                    IsLoading="@isLoadingBookmarks"
+                    ShowTitle="false"
+                    ShowDate="true"
+                    ShowRemoveButton="true"
+                    ShowClearButton="true"
+                    MaxDisplay="10"
+                    PreventNavigation="true"
+                    OnBookmarkClick="OnBookmarkClicked"
+                    OnBookmarkRemove="OnBookmarkRemoved"
+                    OnClearAll="OnClearAllBookmarks" />
+            </div>
+        }
     </div>
 
     <!-- 章節導航（上方） -->
-    <div class="mb-3">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
         <BibleChapterNavigator 
             ChapterTitle="@chapterTitle"
             HasPrevious="@hasPreviousChapter"
@@ -48,6 +74,10 @@
             NextTitle="@nextChapterTitle"
             OnPrevious="GoToPreviousChapter"
             OnNext="GoToNextChapter" />
+        
+        <button class="btn btn-outline-primary btn-sm" @onclick="ShowExportDialog" title="導出經文">
+            <i class="bi bi-download me-1"></i>導出
+        </button>
     </div>
 
     <!-- 經文內容 -->
@@ -62,7 +92,7 @@
     }
     else if (verses != null && verses.Any())
     {
-        <div class="bible-verses-container" @ref="versesContainer">
+        <div class="bible-verses-container" style="@GetContainerStyle()" @ref="versesContainer">
             @foreach (var verse in verses)
             {
                 <BibleVerseDisplay 
@@ -99,6 +129,33 @@
     }
 </div>
 
+<!-- 導出對話框 -->
+<BibleExportDialog 
+    IsVisible="@showExportDialog"
+    BookNumber="@currentBookNumber"
+    ChapterNumber="@currentChapterNumber"
+    ChapterTitle="@chapterTitle"
+    BookName="@currentBookName"
+    OnClose="CloseExportDialog"
+    OnExportSuccess="OnExportSuccess" />
+
+<!-- Toast 通知 -->
+@if (!string.IsNullOrEmpty(toastMessage))
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div class="toast show" role="alert">
+            <div class="toast-header">
+                <i class="bi bi-check-circle text-success me-2"></i>
+                <strong class="me-auto">導出</strong>
+                <button type="button" class="btn-close" @onclick="() => toastMessage = null"></button>
+            </div>
+            <div class="toast-body">
+                @toastMessage
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter]
     public int BookNumber { get; set; }
@@ -128,7 +185,15 @@
     private BibleSettings settings = new();
     private bool isLoading = false;
     private bool showSettings = false;
+    private bool showBookmarks = false;
+    private bool isLoadingBookmarks = false;
+    private List<BibleBookmark> bookmarks = new();
     private ElementReference versesContainer;
+
+    // 導出相關
+    private bool showExportDialog = false;
+    private string currentBookName = "";
+    private string? toastMessage;
 
     // 導航相關
     private string chapterTitle = "";
@@ -201,6 +266,7 @@
             {
                 verses = ReadingService.GetChapterVerses(currentBookNumber, currentChapterNumber);
                 chapterTitle = ReadingService.GetChapterTitle(currentBookNumber, currentChapterNumber);
+                currentBookName = ReadingService.GetBookName(currentBookNumber);
 
                 // 計算上下章資訊
                 var prev = ReadingService.GetPreviousChapter(currentBookNumber, currentChapterNumber);
@@ -307,6 +373,96 @@
         {
             var bookName = ReadingService.GetBookName(currentBookNumber);
             await BookmarkService.AddBookmarkAsync(currentBookNumber, bookName, currentChapterNumber);
+            
+            // 重新載入書籤列表
+            await LoadBookmarks();
         }
+    }
+
+    private void ToggleBookmarks()
+    {
+        showBookmarks = !showBookmarks;
+        if (showBookmarks && !bookmarks.Any())
+        {
+            _ = LoadBookmarks();
+        }
+    }
+
+    private async Task LoadBookmarks()
+    {
+        if (BookmarkService == null) return;
+
+        isLoadingBookmarks = true;
+        StateHasChanged();
+
+        try
+        {
+            bookmarks = await BookmarkService.LoadBookmarksAsync();
+        }
+        catch
+        {
+            // Ignore errors
+        }
+        finally
+        {
+            isLoadingBookmarks = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnBookmarkClicked(BibleBookmark bookmark)
+    {
+        currentBookNumber = bookmark.BookNumber;
+        currentChapterNumber = bookmark.ChapterNumber;
+        highlightedVerseNumber = null;
+        await LoadChapter();
+        UpdateUrl();
+    }
+
+    private async Task OnBookmarkRemoved(BibleBookmark bookmark)
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.RemoveBookmarkAsync(bookmark);
+            await LoadBookmarks();
+        }
+    }
+
+    private async Task OnClearAllBookmarks()
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.ClearAllBookmarksAsync();
+            bookmarks.Clear();
+            StateHasChanged();
+        }
+    }
+
+    private void ShowExportDialog()
+    {
+        showExportDialog = true;
+    }
+
+    private void CloseExportDialog()
+    {
+        showExportDialog = false;
+    }
+
+    private string GetContainerStyle()
+    {
+        var bgColor = BibleStyleHelper.GetBackgroundColorHex(settings.BackgroundColor);
+        return $"background-color: {bgColor};";
+    }
+
+    private async Task OnExportSuccess(string message)
+    {
+        toastMessage = message;
+        showExportDialog = false;
+        StateHasChanged();
+
+        // 自動關閉 Toast
+        await Task.Delay(3000);
+        toastMessage = null;
+        StateHasChanged();
     }
 }

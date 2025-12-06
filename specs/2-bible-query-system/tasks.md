@@ -148,10 +148,10 @@ Based on plan.md project structure:
 
 ### Implementation for User Story 3
 
-- [ ] T048 [US3] Enhance `CovenantPromptKey/Components/Shared/Bible/BibleSettingsPanel.razor` with full font/colour options
-- [ ] T049 [US3] Integrate settings with BibleVerseDisplay.razor for real-time style updates
-- [ ] T050 [US3] Implement settings persistence via BibleSettingsService in search and read pages
-- [ ] T051 [US3] Add night mode special handling (auto white text on black background)
+- [X] T048 [US3] Enhance `CovenantPromptKey/Components/Shared/Bible/BibleSettingsPanel.razor` with full font/colour options
+- [X] T049 [US3] Integrate settings with BibleVerseDisplay.razor for real-time style updates
+- [X] T050 [US3] Implement settings persistence via BibleSettingsService in search and read pages
+- [X] T051 [US3] Add night mode special handling (auto white text on black background)
 
 **Checkpoint**: At this point, User Story 3 should be fully functional - reading experience is customisable
 
@@ -165,16 +165,16 @@ Based on plan.md project structure:
 
 ### Tests for User Story 4
 
-- [ ] T052 [P] [US4] Create `CovenantPromptKey.Tests/Services/BibleBookmarkServiceTests.cs` unit tests
+- [X] T052 [P] [US4] Create `CovenantPromptKey.NUnitTests/Services/BibleBookmarkServiceTests.cs` unit tests
 
 ### Implementation for User Story 4
 
-- [ ] T053 [P] [US4] Create `CovenantPromptKey/Services/Interfaces/IBibleBookmarkService.cs` interface
-- [ ] T054 [US4] Create `CovenantPromptKey/Services/Implementations/BibleBookmarkService.cs` implementation
-- [ ] T055 [US4] Register IBibleBookmarkService in `CovenantPromptKey/Program.cs`
-- [ ] T056 [P] [US4] Create `CovenantPromptKey/Components/Shared/Bible/BibleBookmarkList.razor` component
-- [ ] T057 [US4] Integrate bookmark auto-add in BibleReadPage.razor (on chapter change)
-- [ ] T058 [US4] Add bookmark quick-jump in BibleReadPage.razor and BibleHomePage.razor
+- [X] T053 [P] [US4] Create `CovenantPromptKey/Services/Interfaces/IBibleBookmarkService.cs` interface
+- [X] T054 [US4] Create `CovenantPromptKey/Services/Implementations/BibleBookmarkService.cs` implementation
+- [X] T055 [US4] Register IBibleBookmarkService in `CovenantPromptKey/Program.cs`
+- [X] T056 [P] [US4] Create `CovenantPromptKey/Components/Shared/Bible/BibleBookmarkList.razor` component
+- [X] T057 [US4] Integrate bookmark auto-add in BibleReadPage.razor (on chapter change)
+- [X] T058 [US4] Add bookmark quick-jump in BibleReadPage.razor and BibleHomePage.razor
 
 **Checkpoint**: At this point, User Story 4 should be fully functional - reading history is tracked
 
@@ -188,17 +188,17 @@ Based on plan.md project structure:
 
 ### Tests for User Story 5
 
-- [ ] T059 [P] [US5] Create `CovenantPromptKey.Tests/Services/BibleExportServiceTests.cs` unit tests
+- [X] T059 [P] [US5] Create `CovenantPromptKey.NUnitTests/Services/BibleExportServiceTests.cs` unit tests
 
 ### Implementation for User Story 5
 
-- [ ] T060 [P] [US5] Create `CovenantPromptKey/Services/Interfaces/IBibleExportService.cs` interface
-- [ ] T061 [US5] Create `CovenantPromptKey/Services/Implementations/BibleExportService.cs` implementation
-- [ ] T062 [US5] Register IBibleExportService in `CovenantPromptKey/Program.cs`
-- [ ] T063 [P] [US5] Create `CovenantPromptKey/Components/Shared/Bible/BibleExportDialog.razor` component
-- [ ] T064 [US5] Integrate export dialog in BibleReadPage.razor
-- [ ] T065 [US5] Implement "one file per book" export option (multiple .md files)
-- [ ] T066 [US5] Implement copy-to-clipboard and download functionality
+- [X] T060 [P] [US5] Create `CovenantPromptKey/Services/Interfaces/IBibleExportService.cs` interface
+- [X] T061 [US5] Create `CovenantPromptKey/Services/Implementations/BibleExportService.cs` implementation
+- [X] T062 [US5] Register IBibleExportService in `CovenantPromptKey/Program.cs`
+- [X] T063 [P] [US5] Create `CovenantPromptKey/Components/Shared/Bible/BibleExportDialog.razor` component
+- [X] T064 [US5] Integrate export dialog in BibleReadPage.razor
+- [X] T065 [US5] Implement "one file per book" export option (multiple .md files)
+- [X] T066 [US5] Implement copy-to-clipboard and download functionality
 
 **Checkpoint**: At this point, User Story 5 should be fully functional - verses can be exported
 
@@ -212,20 +212,20 @@ Based on plan.md project structure:
 
 ### Tests for User Story 6
 
-- [ ] T067 [P] [US6] Create `CovenantPromptKey.Tests/Services/BibleGameServiceTests.cs` unit tests
+- [X] T067 [P] [US6] Create `CovenantPromptKey.NUnitTests/Services/BibleGameServiceTests.cs` unit tests
 
 ### Implementation for User Story 6
 
-- [ ] T068 [P] [US6] Create `CovenantPromptKey/Services/Interfaces/IBibleGameService.cs` interface
-- [ ] T069 [US6] Create `CovenantPromptKey/Services/Implementations/BibleGameService.cs` implementation
-- [ ] T070 [US6] Register IBibleGameService in `CovenantPromptKey/Program.cs`
-- [ ] T071 [US6] Create `CovenantPromptKey/Components/Pages/Bible/BibleGamePage.razor` (route: /bible/game)
-- [ ] T072 [US6] Create `CovenantPromptKey/Components/Pages/Bible/BibleGamePage.razor.css` styles
-- [ ] T073 [US6] Implement game flow: start → questions → answer feedback → results
-- [ ] T074 [US6] Implement game record storage (high score + recent 5 games)
-- [ ] T075 [US6] Implement wrong answer recording and review panel
-- [ ] T076 [US6] Implement separate clear functions for game records and wrong answers
-- [ ] T077 [US6] Add "Game 2" placeholder card with "敬請期待" message
+- [X] T068 [P] [US6] Create `CovenantPromptKey/Services/Interfaces/IBibleGameService.cs` interface
+- [X] T069 [US6] Create `CovenantPromptKey/Services/Implementations/BibleGameService.cs` implementation
+- [X] T070 [US6] Register IBibleGameService in `CovenantPromptKey/Program.cs`
+- [X] T071 [US6] Create `CovenantPromptKey/Components/Pages/Bible/BibleGamePage.razor` (route: /bible/game)
+- [X] T072 [US6] Create `CovenantPromptKey/Components/Pages/Bible/BibleGamePage.razor.css` styles
+- [X] T073 [US6] Implement game flow: start → questions → answer feedback → results
+- [X] T074 [US6] Implement game record storage (high score + recent 5 games)
+- [X] T075 [US6] Implement wrong answer recording and review panel
+- [X] T076 [US6] Implement separate clear functions for game records and wrong answers
+- [X] T077 [US6] Add "Game 2" placeholder card with "敬請期待" message
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -235,13 +235,13 @@ Based on plan.md project structure:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T078 [P] Update BibleHomePage.razor with feature cards and recent bookmarks display
-- [ ] T079 [P] Add responsive styles for mobile/tablet in `bible.css`
-- [ ] T080 Code cleanup and ensure consistent error handling across all services
-- [ ] T081 [P] Add loading states and empty states for all components
-- [ ] T082 Performance validation: verify search < 2s, suggestions < 300ms
-- [ ] T083 Run quickstart.md validation - verify all steps work correctly
-- [ ] T084 Final integration test - navigate through all features end-to-end
+- [X] T078 [P] Update BibleHomePage.razor with feature cards and recent bookmarks display
+- [X] T079 [P] Add responsive styles for mobile/tablet in `bible.css`
+- [X] T080 Code cleanup and ensure consistent error handling across all services
+- [X] T081 [P] Add loading states and empty states for all components
+- [X] T082 Performance validation: verify search < 2s, suggestions < 300ms
+- [X] T083 Run quickstart.md validation - verify all steps work correctly
+- [X] T084 Final integration test - navigate through all features end-to-end
 
 ---
 

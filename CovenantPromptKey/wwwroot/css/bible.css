@@ -70,8 +70,12 @@
     line-height: 1.8;
 }
 
+.bible-verse-wrapper {
+    line-height: 1.8;
+}
+
 .bible-verse-line {
-    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
     display: flex;
     gap: 0.5rem;
 }
@@ -389,7 +393,60 @@
    ========================================================================== */
 
 .bible-export-dialog {
-    padding: 1rem;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+}
+
+.bible-export-dialog.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bible-export-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.bible-export-content {
+    position: relative;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1;
+}
+
+.bible-export-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.bible-export-body {
+    padding: 1.5rem;
+}
+
+.bible-export-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
 }
 
 .bible-export-option {

@@ -49,18 +49,16 @@
     @if (recentBookmarks.Any())
     {
         <div class="mt-4">
-            <h5 class="mb-3">
-                <i class="bi bi-clock-history me-2"></i>最近閱讀
-            </h5>
-            <div class="bible-bookmark-list">
-                @foreach (var bookmark in recentBookmarks.Take(5))
-                {
-                    <a href="/bible/read/@bookmark.BookNumber/@bookmark.ChapterNumber" class="bible-bookmark-item text-decoration-none">
-                        <span class="bible-bookmark-reference">@bookmark.DisplayReference</span>
-                        <span class="bible-bookmark-date">@bookmark.CreatedAt.ToLocalTime().ToString("MM/dd HH:mm")</span>
-                    </a>
-                }
-            </div>
+            <BibleBookmarkList 
+                Bookmarks="@recentBookmarks"
+                IsLoading="@isLoadingBookmarks"
+                ShowTitle="true"
+                ShowDate="true"
+                ShowRemoveButton="true"
+                ShowClearButton="true"
+                MaxDisplay="5"
+                OnBookmarkRemove="OnBookmarkRemoved"
+                OnClearAll="OnClearAllBookmarks" />
         </div>
     }
 
@@ -85,6 +83,7 @@
     private BibleIndex? BibleIndex { get; set; }
 
     private List<BibleBookmark> recentBookmarks = new();
+    private bool isLoadingBookmarks = false;
     private int totalChapters = 0;
     private int totalVerses = 0;
 
@@ -101,15 +100,49 @@
     {
         if (firstRender && BookmarkService != null)
         {
-            try
+            await LoadBookmarks();
+        }
+    }
+
+    private async Task LoadBookmarks()
+    {
+        isLoadingBookmarks = true;
+        StateHasChanged();
+
+        try
+        {
+            if (BookmarkService != null)
             {
                 recentBookmarks = await BookmarkService.LoadBookmarksAsync();
-                StateHasChanged();
             }
-            catch
-            {
-                // Ignore errors during bookmark loading
-            }
+        }
+        catch
+        {
+            // Ignore errors during bookmark loading
+        }
+        finally
+        {
+            isLoadingBookmarks = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnBookmarkRemoved(BibleBookmark bookmark)
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.RemoveBookmarkAsync(bookmark);
+            await LoadBookmarks();
+        }
+    }
+
+    private async Task OnClearAllBookmarks()
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.ClearAllBookmarksAsync();
+            recentBookmarks.Clear();
+            StateHasChanged();
         }
     }
 }

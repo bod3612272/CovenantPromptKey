@@ -1,0 +1,216 @@
+@using CovenantPromptKey.Models.Bible
+@using CovenantPromptKey.Services.Interfaces
+
+<div class="bible-bookmark-panel @(IsCompact ? "compact" : "")">
+    @if (ShowTitle)
+    {
+        <div class="bible-bookmark-header d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">
+                <i class="bi bi-clock-history me-2"></i>閱讀記錄
+                @if (Bookmarks.Any())
+                {
+                    <span class="badge bg-secondary ms-2">@Bookmarks.Count</span>
+                }
+            </h6>
+            @if (Bookmarks.Any() && ShowClearButton)
+            {
+                <button class="btn btn-sm btn-outline-danger" @onclick="ClearAllBookmarks" title="清除所有閱讀記錄">
+                    <i class="bi bi-trash"></i>
+                </button>
+            }
+        </div>
+    }
+
+    @if (IsLoading)
+    {
+        <div class="bible-bookmark-loading text-center text-muted py-3">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            載入閱讀記錄...
+        </div>
+    }
+    else if (!Bookmarks.Any())
+    {
+        <div class="bible-bookmark-empty text-center text-muted py-3">
+            <i class="bi bi-clock-history fs-2 d-block mb-2"></i>
+            <p class="mb-0 small">尚無閱讀記錄</p>
+            <p class="mb-0 small text-secondary">閱讀章節時會自動記錄</p>
+        </div>
+    }
+    else
+    {
+        <div class="bible-bookmark-list">
+            @foreach (var bookmark in DisplayedBookmarks)
+            {
+                <div class="bible-bookmark-item d-flex justify-content-between align-items-center">
+                    <a href="/bible/read/@bookmark.BookNumber/@bookmark.ChapterNumber" 
+                       class="bible-bookmark-link flex-grow-1 text-decoration-none"
+                       @onclick="() => OnBookmarkClicked(bookmark)"
+                       @onclick:preventDefault="@PreventNavigation">
+                        <span class="bible-bookmark-reference">@bookmark.DisplayReference</span>
+                        @if (ShowDate)
+                        {
+                            <span class="bible-bookmark-date text-muted small ms-2">
+                                @GetRelativeTime(bookmark.CreatedAt)
+                            </span>
+                        }
+                    </a>
+                    @if (ShowRemoveButton)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary border-0" 
+                                @onclick="() => RemoveBookmark(bookmark)" 
+                                @onclick:stopPropagation="true"
+                                title="移除此記錄">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (Bookmarks.Count > MaxDisplay && !ShowAll)
+        {
+            <div class="bible-bookmark-more text-center mt-2">
+                <button class="btn btn-sm btn-link text-decoration-none" @onclick="ToggleShowAll">
+                    顯示全部 (@Bookmarks.Count)
+                    <i class="bi bi-chevron-down ms-1"></i>
+                </button>
+            </div>
+        }
+        else if (ShowAll && Bookmarks.Count > MaxDisplay)
+        {
+            <div class="bible-bookmark-more text-center mt-2">
+                <button class="btn btn-sm btn-link text-decoration-none" @onclick="ToggleShowAll">
+                    收起
+                    <i class="bi bi-chevron-up ms-1"></i>
+                </button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// 書籤列表
+    /// </summary>
+    [Parameter]
+    public List<BibleBookmark> Bookmarks { get; set; } = new();
+
+    /// <summary>
+    /// 是否正在載入
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// 是否顯示標題
+    /// </summary>
+    [Parameter]
+    public bool ShowTitle { get; set; } = true;
+
+    /// <summary>
+    /// 是否顯示日期
+    /// </summary>
+    [Parameter]
+    public bool ShowDate { get; set; } = true;
+
+    /// <summary>
+    /// 是否顯示移除按鈕
+    /// </summary>
+    [Parameter]
+    public bool ShowRemoveButton { get; set; } = true;
+
+    /// <summary>
+    /// 是否顯示清除全部按鈕
+    /// </summary>
+    [Parameter]
+    public bool ShowClearButton { get; set; } = true;
+
+    /// <summary>
+    /// 是否為精簡模式
+    /// </summary>
+    [Parameter]
+    public bool IsCompact { get; set; }
+
+    /// <summary>
+    /// 最大顯示筆數
+    /// </summary>
+    [Parameter]
+    public int MaxDisplay { get; set; } = 5;
+
+    /// <summary>
+    /// 阻止導航（用於自訂點擊行為）
+    /// </summary>
+    [Parameter]
+    public bool PreventNavigation { get; set; }
+
+    /// <summary>
+    /// 點擊書籤事件
+    /// </summary>
+    [Parameter]
+    public EventCallback<BibleBookmark> OnBookmarkClick { get; set; }
+
+    /// <summary>
+    /// 移除書籤事件
+    /// </summary>
+    [Parameter]
+    public EventCallback<BibleBookmark> OnBookmarkRemove { get; set; }
+
+    /// <summary>
+    /// 清除所有書籤事件
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClearAll { get; set; }
+
+    private bool ShowAll { get; set; }
+
+    private IEnumerable<BibleBookmark> DisplayedBookmarks => 
+        ShowAll ? Bookmarks : Bookmarks.Take(MaxDisplay);
+
+    private void ToggleShowAll()
+    {
+        ShowAll = !ShowAll;
+    }
+
+    private async Task OnBookmarkClicked(BibleBookmark bookmark)
+    {
+        if (OnBookmarkClick.HasDelegate)
+        {
+            await OnBookmarkClick.InvokeAsync(bookmark);
+        }
+    }
+
+    private async Task RemoveBookmark(BibleBookmark bookmark)
+    {
+        if (OnBookmarkRemove.HasDelegate)
+        {
+            await OnBookmarkRemove.InvokeAsync(bookmark);
+        }
+    }
+
+    private async Task ClearAllBookmarks()
+    {
+        if (OnClearAll.HasDelegate)
+        {
+            await OnClearAll.InvokeAsync();
+        }
+    }
+
+    private string GetRelativeTime(DateTime utcTime)
+    {
+        var localTime = utcTime.ToLocalTime();
+        var diff = DateTime.Now - localTime;
+
+        if (diff.TotalMinutes < 1)
+            return "剛剛";
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes} 分鐘前";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours} 小時前";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays} 天前";
+
+        return localTime.ToString("MM/dd");
+    }
+}

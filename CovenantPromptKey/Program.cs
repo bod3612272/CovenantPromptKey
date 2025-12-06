@@ -50,6 +50,8 @@ namespace CovenantPromptKey
             builder.Services.AddScoped<IBibleBookmarkService, BibleBookmarkService>();
             builder.Services.AddScoped<IBibleSearchService, BibleSearchService>();
             builder.Services.AddScoped<IBibleReadingService, BibleReadingService>();
+            builder.Services.AddScoped<IBibleExportService, BibleExportService>();
+            builder.Services.AddScoped<IBibleGameService, BibleGameService>();
 
             // Transient services (stateless)
             builder.Services.AddTransient<IKeywordService, KeywordService>();
