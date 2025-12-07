@@ -33,7 +33,12 @@ public class BibleReadingService : IBibleReadingService
             return 0;
         }
 
-        return _bibleIndex.GetChapterCount(bookNumber);
+        // 使用書卷名稱查詢（避免舊約新約編號重複問題）
+        // 注意：不能使用 _bibleIndex.GetChapterCount(bookName) 因為它內部可能也有問題
+        // 正確做法：直接從 Book 物件取得章節數
+        var bookName = GetBookName(bookNumber);
+        var book = _bibleIndex.GetBook(bookName);
+        return book?.Chapters.Count ?? 0;
     }
 
     /// <inheritdoc />
@@ -59,11 +64,18 @@ public class BibleReadingService : IBibleReadingService
 
         try
         {
-            var chapter = _bibleIndex.GetChapter(bookNumber, chapterNumber);
-            if (chapter == null)
+            // 使用書卷名稱查詢（避免舊約新約編號重複問題）
+            var bookName = GetBookName(bookNumber);
+            
+            // 注意：不能使用 _bibleIndex.GetChapter(bookName, chapterNumber)
+            // 因為該方法內部會使用 Book.Number 查詢 _chapterIndex，而舊約新約編號重複會導致錯誤
+            // 正確做法：直接從 Book 物件的 Chapters 列表中取得
+            var book = _bibleIndex.GetBook(bookName);
+            if (book == null || chapterNumber < 1 || chapterNumber > book.Chapters.Count)
                 return new List<VerseWithLocation>();
 
-            var bookName = GetBookName(bookNumber);
+            var chapter = book.Chapters[chapterNumber - 1];
+
             return chapter.Verses.Select(v => new VerseWithLocation
             {
                 BookNumber = bookNumber,
@@ -90,14 +102,16 @@ public class BibleReadingService : IBibleReadingService
 
         try
         {
-            var verse = _bibleIndex.GetVerse(bookNumber, chapterNumber, verseNumber);
+            // 使用書卷名稱查詢（避免舊約新約編號重複問題）
+            var bookName = GetBookName(bookNumber);
+            var verse = _bibleIndex.GetVerse(bookName, chapterNumber, verseNumber);
             if (verse == null)
                 return null;
 
             return new VerseWithLocation
             {
                 BookNumber = bookNumber,
-                BookName = GetBookName(bookNumber),
+                BookName = bookName,
                 ChapterNumber = chapterNumber,
                 VerseNumber = verseNumber,
                 Content = verse.Content

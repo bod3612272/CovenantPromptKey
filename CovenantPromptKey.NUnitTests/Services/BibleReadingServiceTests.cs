@@ -67,12 +67,12 @@ public class BibleReadingServiceTests
     [Test]
     public void GetChapterCount_FirstBook_ShouldReturnPositiveCount()
     {
-        // Act
+        // Act - bookNumber=1 代表 BookNames[0] = "創世記"
         var count = _sut.GetChapterCount(1);
 
-        // Assert
+        // Assert - 創世記有 50 章
         count.Should().BeGreaterThan(0);
-        count.Should().Be(_bibleIndex.GetChapterCount(1));
+        count.Should().Be(_bibleIndex.GetChapterCount("創世記"));
     }
 
     [Test]
@@ -80,14 +80,14 @@ public class BibleReadingServiceTests
     {
         // BibleIndex 的 BookNames 是實際書卷列表，使用其長度
         var totalBooks = _bibleIndex.BookNames.Count;
+        var lastBookName = _bibleIndex.BookNames[totalBooks - 1]; // 啟示錄
         
         // Act
         var count = _sut.GetChapterCount(totalBooks);
 
-        // Assert - 驗證與 BibleIndex 一致
-        // 注意：BibleStaticData 中的 Book.Number 是舊約/新約分開編號的
-        // 所以 GetChapterCount(66) 可能返回 0（因為不存在 Number=66 的書卷）
-        count.Should().Be(_bibleIndex.GetChapterCount(totalBooks));
+        // Assert - 使用書卷名稱查詢來驗證
+        count.Should().BeGreaterThan(0);
+        count.Should().Be(_bibleIndex.GetChapterCount(lastBookName));
     }
 
     [Test]
@@ -536,6 +536,257 @@ public class BibleReadingServiceTests
 
         // Assert
         count.Should().Be(0);
+    }
+
+    #endregion
+
+    #region BibleData DLL Design Validation Tests
+
+    /// <summary>
+    /// 驗證 DLL 的設計：舊約新約分開編號是預期行為
+    /// Book.Number 在舊約是 1-39，新約是 1-27（獨立編號）
+    /// </summary>
+    [Test]
+    public void BibleStaticData_ShouldHave66Books()
+    {
+        // Arrange
+        var books = BibleData.BibleStaticData.Bible.Books;
+
+        // Assert
+        books.Should().HaveCount(66, "聖經應該有 66 卷書");
+    }
+
+    [Test]
+    public void BibleStaticData_OldTestament_ShouldHave39BooksWithNumber1To39()
+    {
+        // Arrange - 舊約前 39 本
+        var books = BibleData.BibleStaticData.Bible.Books.Take(39).ToList();
+
+        // Assert
+        books.Should().HaveCount(39);
+        books.First().Number.Should().Be(1, "舊約第一卷（創世記）編號應為 1");
+        books.First().Name.Should().Be("創世記");
+        books.Last().Number.Should().Be(39, "舊約最後一卷（瑪拉基書）編號應為 39");
+        books.Last().Name.Should().Be("瑪拉基書");
+    }
+
+    [Test]
+    public void BibleStaticData_NewTestament_ShouldHave27BooksWithNumber1To27()
+    {
+        // Arrange - 新約後 27 本
+        var books = BibleData.BibleStaticData.Bible.Books.Skip(39).ToList();
+
+        // Assert
+        books.Should().HaveCount(27);
+        books.First().Number.Should().Be(1, "新約第一卷（馬太福音）編號應為 1（新約獨立編號）");
+        books.First().Name.Should().Be("馬太福音");
+        books.Last().Number.Should().Be(27, "新約最後一卷（啟示錄）編號應為 27");
+        books.Last().Name.Should().Be("啟示錄");
+    }
+
+    /// <summary>
+    /// 驗證書卷名稱是唯一的（這是正確的識別方式）
+    /// </summary>
+    [Test]
+    public void BibleIndex_BookNamesShouldBeUnique()
+    {
+        // Arrange
+        var books = BibleData.BibleStaticData.Bible.Books;
+
+        // Act
+        var bookNames = books.Select(b => b.Name).ToList();
+        var uniqueBookNames = bookNames.Distinct().ToList();
+
+        // Assert
+        bookNames.Should().HaveCount(uniqueBookNames.Count,
+            "所有 66 本書卷的名稱應該都是唯一的");
+    }
+
+    /// <summary>
+    /// 驗證正確的查詢方式：使用書卷名稱查詢
+    /// </summary>
+    [Test]
+    public void BibleIndex_GetBookByName_ShouldReturnCorrectBook()
+    {
+        // Act
+        var genesis = _bibleIndex.GetBook("創世記");
+        var matthew = _bibleIndex.GetBook("馬太福音");
+
+        // Assert
+        genesis.Should().NotBeNull();
+        genesis!.Name.Should().Be("創世記");
+        genesis.Number.Should().Be(1, "創世記在舊約中的編號是 1");
+
+        matthew.Should().NotBeNull();
+        matthew!.Name.Should().Be("馬太福音");
+        matthew.Number.Should().Be(1, "馬太福音在新約中的編號也是 1（獨立編號系統）");
+    }
+
+    /// <summary>
+    /// 驗證使用書卷名稱查詢經文是正確的方式
+    /// </summary>
+    [Test]
+    public void BibleIndex_GetVerseByName_ShouldReturnCorrectContent()
+    {
+        // Arrange
+        const string expectedGenesisStart = "起初";
+        const string expectedMatthewStart = "亞伯拉罕";
+
+        // Act
+        var genesisVerse = _bibleIndex.GetVerse("創世記", 1, 1);
+        var matthewVerse = _bibleIndex.GetVerse("馬太福音", 1, 1);
+
+        // Assert
+        genesisVerse.Should().NotBeNull();
+        genesisVerse!.Content.Should().StartWith(expectedGenesisStart,
+            "創世記 1:1 應該以「起初」開頭");
+
+        matthewVerse.Should().NotBeNull();
+        matthewVerse!.Content.Should().StartWith(expectedMatthewStart,
+            "馬太福音 1:1 應該以「亞伯拉罕」開頭");
+    }
+
+    #endregion
+
+    #region BibleReadingService Corrected Tests
+
+    /// <summary>
+    /// 驗證 GetBookName(1) 確實返回「創世記」
+    /// </summary>
+    [Test]
+    public void GetBookName_Book1_ShouldReturnGenesis()
+    {
+        // Act
+        var bookName = _sut.GetBookName(1);
+
+        // Assert
+        bookName.Should().Be("創世記");
+    }
+
+    /// <summary>
+    /// 記錄 BibleIndex.GetChapter(string, int) 的已知限制：
+    /// 該方法內部使用 Book.Number 查詢 _chapterIndex，
+    /// 由於舊約新約 Book.Number 重複（都從 1 開始），會導致錯誤結果。
+    /// 
+    /// 正確做法：直接從 Book.Chapters 列表取得章節，不要使用此方法。
+    /// </summary>
+    [Test]
+    public void BibleIndex_GetChapterByName_KnownLimitation()
+    {
+        // Arrange
+        var genesisBook = _bibleIndex.GetBook("創世記");
+        var matthewBook = _bibleIndex.GetBook("馬太福音");
+
+        // Assert - GetBook(string) 可以正確取得書卷
+        genesisBook.Should().NotBeNull();
+        genesisBook!.Name.Should().Be("創世記");
+        matthewBook.Should().NotBeNull();
+        matthewBook!.Name.Should().Be("馬太福音");
+
+        // 正確做法：直接從 Book.Chapters 取得章節
+        var genesisChapter1 = genesisBook.Chapters[0];
+        var matthewChapter1 = matthewBook.Chapters[0];
+
+        genesisChapter1.Verses[0].Content.Should().StartWith("起初",
+            "直接從 Book.Chapters 取得的創世記第 1 章應該正確");
+        matthewChapter1.Verses[0].Content.Should().StartWith("亞伯拉罕",
+            "直接從 Book.Chapters 取得的馬太福音第 1 章應該正確");
+
+        // 注意：BibleIndex.GetChapter(string, int) 有已知限制
+        // 因為它內部使用 Book.Number 查詢，而舊約新約編號重複
+        // 所以不測試該方法的正確性，改用上述正確做法
+    }
+
+    /// <summary>
+    /// 驗證 BibleReadingService 使用列表索引（1-66）查詢時返回正確的書卷內容
+    /// 服務內部應該將索引轉換為書卷名稱進行查詢
+    /// </summary>
+    [Test]
+    public void GetChapterVerses_Book1_ShouldReturnGenesisContent()
+    {
+        // Arrange
+        const string expectedContentStart = "起初"; // 創世記 1:1
+        
+        // 先驗證 GetBookName 正確
+        var bookName = _sut.GetBookName(1);
+        bookName.Should().Be("創世記", "GetBookName(1) 應該返回創世記");
+
+        // Act - bookNumber=1 代表 BookNames[0] = "創世記"
+        var verses = _sut.GetChapterVerses(1, 1);
+
+        // Assert
+        verses.Should().NotBeEmpty("應該有經文返回");
+        var firstVerse = verses.First();
+        firstVerse.BookName.Should().Be("創世記", "BookName 應該是創世記");
+        firstVerse.Content.Should().StartWith(expectedContentStart,
+            $"GetChapterVerses(1, 1) 應該返回創世記第 1 章的內容，但實際得到：{firstVerse.Content.Substring(0, Math.Min(50, firstVerse.Content.Length))}");
+    }
+
+    [Test]
+    public void GetChapterVerses_Book40_ShouldReturnMatthewContent()
+    {
+        // Arrange
+        const string expectedContentStart = "亞伯拉罕"; // 馬太福音 1:1
+
+        // Act - bookNumber=40 代表 BookNames[39] = "馬太福音"
+        var verses = _sut.GetChapterVerses(40, 1);
+
+        // Assert
+        verses.Should().NotBeEmpty();
+        var firstVerse = verses.First();
+        firstVerse.BookName.Should().Be("馬太福音");
+        firstVerse.Content.Should().StartWith(expectedContentStart,
+            "GetChapterVerses(40, 1) 應該返回馬太福音第 1 章的內容");
+    }
+
+    [Test]
+    public void GetVerse_Book1_ShouldReturnGenesisVerse()
+    {
+        // Arrange
+        const string expectedContentStart = "起初";
+
+        // Act
+        var verse = _sut.GetVerse(1, 1, 1);
+
+        // Assert
+        verse.Should().NotBeNull();
+        verse!.BookName.Should().Be("創世記");
+        verse.Content.Should().StartWith(expectedContentStart);
+    }
+
+    [Test]
+    public void GetVerse_Book40_ShouldReturnMatthewVerse()
+    {
+        // Arrange
+        const string expectedContentStart = "亞伯拉罕";
+
+        // Act
+        var verse = _sut.GetVerse(40, 1, 1);
+
+        // Assert
+        verse.Should().NotBeNull();
+        verse!.BookName.Should().Be("馬太福音");
+        verse.Content.Should().StartWith(expectedContentStart);
+    }
+
+    [Test]
+    public void GetChapterCount_Book1_ShouldReturnGenesisChapterCount()
+    {
+        // Act
+        var count = _sut.GetChapterCount(1);
+
+        // Assert - 創世記有 50 章
+        count.Should().Be(50);
+    }
+
+    [Test]
+    public void GetChapterCount_Book40_ShouldReturnMatthewChapterCount()
+    {
+        // Act
+        var count = _sut.GetChapterCount(40);
+
+        // Assert - 馬太福音有 28 章
+        count.Should().Be(28);
     }
 
     #endregion
