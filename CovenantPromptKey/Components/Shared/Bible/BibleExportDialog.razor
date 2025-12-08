@@ -1,0 +1,270 @@
+@using CovenantPromptKey.Models.Bible
+@using CovenantPromptKey.Services.Interfaces
+
+@inject IJSRuntime JSRuntime
+
+<div class="bible-export-dialog @(IsVisible ? "show" : "")">
+    <div class="bible-export-backdrop" @onclick="Close"></div>
+    <div class="bible-export-content">
+        <div class="bible-export-header">
+            <h5 class="mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>導出經文
+            </h5>
+            <button type="button" class="btn-close" @onclick="Close"></button>
+        </div>
+
+        <div class="bible-export-body">
+            @if (!string.IsNullOrEmpty(ChapterTitle))
+            {
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    即將導出：<strong>@ChapterTitle</strong>
+                    @if (SelectedVerseNumbers.Any())
+                    {
+                        <span>（已選取 @SelectedVerseNumbers.Count 節）</span>
+                    }
+                </div>
+            }
+
+            <!-- 導出風格選擇 -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">導出風格</label>
+                <div class="list-group">
+                    @foreach (var style in Enum.GetValues<ExportStyle>())
+                    {
+                        <label class="list-group-item list-group-item-action @(options.Style == style ? "active" : "")"
+                               @onclick="() => SetStyle(style)">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">@GetStyleName(style)</div>
+                                    <small class="@(options.Style == style ? "text-white-50" : "text-muted")">
+                                        @GetStyleDescription(style)
+                                    </small>
+                                </div>
+                                <input type="radio" class="form-check-input" 
+                                       checked="@(options.Style == style)" 
+                                       @onchange="() => SetStyle(style)" />
+                            </div>
+                        </label>
+                    }
+                </div>
+            </div>
+
+            <!-- 風格預覽 -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">預覽</label>
+                <div class="bg-light p-3 rounded border">
+                    <pre class="mb-0 small" style="white-space: pre-wrap;">@stylePreview</pre>
+                </div>
+            </div>
+
+            <!-- 導出選項 -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">導出選項</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="includeTitle" 
+                           @bind="options.IncludeBookTitle" />
+                    <label class="form-check-label" for="includeTitle">
+                        包含書卷標題
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="bible-export-footer">
+            <button class="btn btn-outline-secondary" @onclick="Close">
+                取消
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CopyToClipboard" disabled="@isExporting">
+                <i class="bi bi-clipboard me-1"></i>複製到剪貼簿
+            </button>
+            <button class="btn btn-primary" @onclick="DownloadFile" disabled="@isExporting">
+                @if (isExporting)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                }
+                else
+                {
+                    <i class="bi bi-download me-1"></i>
+                }
+                下載檔案
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 對話框是否可見
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// 書卷編號
+    /// </summary>
+    [Parameter]
+    public int BookNumber { get; set; }
+
+    /// <summary>
+    /// 章編號
+    /// </summary>
+    [Parameter]
+    public int ChapterNumber { get; set; }
+
+    /// <summary>
+    /// 章標題（例如「創世記 第 1 章」）
+    /// </summary>
+    [Parameter]
+    public string ChapterTitle { get; set; } = "";
+
+    /// <summary>
+    /// 書卷名稱
+    /// </summary>
+    [Parameter]
+    public string BookName { get; set; } = "";
+
+    /// <summary>
+    /// 選取的經節編號（空則導出整章）
+    /// </summary>
+    [Parameter]
+    public List<int> SelectedVerseNumbers { get; set; } = new();
+
+    /// <summary>
+    /// 關閉事件
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// 導出成功事件
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnExportSuccess { get; set; }
+
+    [Inject]
+    private IBibleExportService? ExportService { get; set; }
+
+    [Inject]
+    private IBibleReadingService? ReadingService { get; set; }
+
+    private ExportOptions options = new();
+    private string stylePreview = "";
+    private bool isExporting = false;
+
+    protected override void OnInitialized()
+    {
+        UpdateStylePreview();
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdateStylePreview();
+    }
+
+    private void SetStyle(ExportStyle style)
+    {
+        options.Style = style;
+        UpdateStylePreview();
+    }
+
+    private void UpdateStylePreview()
+    {
+        if (ExportService != null)
+        {
+            stylePreview = ExportService.GetStylePreview(options.Style);
+        }
+    }
+
+    private string GetStyleName(ExportStyle style) => style switch
+    {
+        ExportStyle.Style1 => "風格 1：標準引用格式",
+        ExportStyle.Style2 => "風格 2：分行顯示",
+        ExportStyle.Style3 => "風格 3：連續段落",
+        _ => "未知風格"
+    };
+
+    private string GetStyleDescription(ExportStyle style) => style switch
+    {
+        ExportStyle.Style1 => "(書卷 章:節) 經文內容",
+        ExportStyle.Style2 => "書卷 ( 第 X 章 Y ~ Z 節 ) 換行後逐節顯示",
+        ExportStyle.Style3 => "《書卷》( 第 X 章 Y ~ Z 節 ) 換行後連續段落",
+        _ => ""
+    };
+
+    private string GetExportContent()
+    {
+        if (ExportService == null || ReadingService == null) return "";
+
+        if (SelectedVerseNumbers.Any())
+        {
+            return ExportService.ExportSelectedVerses(BookNumber, ChapterNumber, SelectedVerseNumbers, options);
+        }
+
+        var verses = ReadingService.GetChapterVerses(BookNumber, ChapterNumber);
+        if (!verses.Any()) return "";
+
+        var range = new ExportRange
+        {
+            BookNumber = BookNumber,
+            StartChapter = ChapterNumber,
+            EndChapter = ChapterNumber,
+            StartVerse = 1,
+            EndVerse = verses.Max(v => v.VerseNumber)
+        };
+
+        return ExportService.ExportToMarkdown(range, options);
+    }
+
+    private async Task CopyToClipboard()
+    {
+        isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var content = GetExportContent();
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", content);
+            await OnExportSuccess.InvokeAsync("已複製到剪貼簿");
+        }
+        catch (Exception ex)
+        {
+            await OnExportSuccess.InvokeAsync($"複製失敗：{ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadFile()
+    {
+        isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var content = GetExportContent();
+            var fileName = $"{BookName}_{ChapterNumber}章.md";
+
+            // 使用 Blob 下載檔案
+            await JSRuntime.InvokeVoidAsync("downloadTextFile", fileName, content);
+            await OnExportSuccess.InvokeAsync($"已下載：{fileName}");
+        }
+        catch (Exception ex)
+        {
+            await OnExportSuccess.InvokeAsync($"下載失敗：{ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

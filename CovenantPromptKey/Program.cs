@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using BibleData;
 using CovenantPromptKey.Components;
 using CovenantPromptKey.Services.Implementations;
 using CovenantPromptKey.Services.Interfaces;
@@ -35,11 +36,22 @@ namespace CovenantPromptKey
             // Register application services
             // Singleton services (global state)
             builder.Services.AddSingleton<IDebugLogService, DebugLogService>();
+            builder.Services.AddSingleton<BibleIndex>();
 
             // Scoped services (per Circuit instance)
             builder.Services.AddScoped<ISessionStorageService, SessionStorageService>();
+            builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
             builder.Services.AddScoped<IWorkSessionService, WorkSessionService>();
             builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+            
+            // Bible services (Scoped)
+            builder.Services.AddScoped<IBibleSettingsService, BibleSettingsService>();
+            builder.Services.AddScoped<IBiblePageStateService, BiblePageStateService>();
+            builder.Services.AddScoped<IBibleBookmarkService, BibleBookmarkService>();
+            builder.Services.AddScoped<IBibleSearchService, BibleSearchService>();
+            builder.Services.AddScoped<IBibleReadingService, BibleReadingService>();
+            builder.Services.AddScoped<IBibleExportService, BibleExportService>();
+            builder.Services.AddScoped<IBibleGameService, BibleGameService>();
 
             // Transient services (stateless)
             builder.Services.AddTransient<IKeywordService, KeywordService>();

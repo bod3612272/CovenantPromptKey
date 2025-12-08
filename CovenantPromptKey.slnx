@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="CovenantPromptKey.NUnitTests/CovenantPromptKey.NUnitTests.csproj" />
   <Project Path="CovenantPromptKey.Tests/CovenantPromptKey.Tests.csproj" />
   <Project Path="CovenantPromptKey/CovenantPromptKey.csproj" />
 </Solution>

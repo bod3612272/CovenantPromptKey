@@ -48,4 +48,10 @@
     <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="BibleData">
+      <HintPath>..\Dll\BibleData.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,534 @@
+/* ==========================================================================
+   Bible Module Styles
+   聖經模組專用樣式
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Base Layout
+   ========================================================================== */
+
+.bible-container {
+    padding: 1rem;
+}
+
+.bible-page-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--bs-primary);
+    padding-bottom: 0.5rem;
+}
+
+.bible-page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--bs-primary);
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   2. Sub-Navigation
+   ========================================================================== */
+
+.bible-sub-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.bible-sub-nav-item {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    color: var(--bs-body-color);
+    background-color: white;
+    border: 1px solid #dee2e6;
+    transition: all 0.15s ease-in-out;
+}
+
+.bible-sub-nav-item:hover {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.bible-sub-nav-item.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+/* ==========================================================================
+   3. Verse Display
+   ========================================================================== */
+
+.bible-verse-container {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    line-height: 1.8;
+}
+
+.bible-verse-wrapper {
+    line-height: 1.8;
+}
+
+.bible-verse-line {
+    padding: 0.25rem 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.bible-verse-number {
+    font-weight: 600;
+    color: var(--bs-primary);
+    min-width: 2.5rem;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.bible-verse-content {
+    flex: 1;
+}
+
+.bible-verse-highlight {
+    background-color: #fff3cd;
+    padding: 0 0.125rem;
+    border-radius: 0.125rem;
+}
+
+/* ==========================================================================
+   4. Settings Panel
+   ========================================================================== */
+
+.bible-settings-panel {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.bible-settings-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 1rem;
+}
+
+.bible-settings-label {
+    min-width: 80px;
+    font-weight: 500;
+}
+
+.bible-settings-control {
+    flex: 1;
+}
+
+/* ==========================================================================
+   5. Search Results
+   ========================================================================== */
+
+.bible-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.bible-search-result-item {
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.bible-search-result-item:hover {
+    border-color: var(--bs-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bible-search-result-reference {
+    font-weight: 600;
+    color: var(--bs-primary);
+    margin-bottom: 0.25rem;
+}
+
+.bible-search-result-content {
+    color: var(--bs-body-color);
+}
+
+/* ==========================================================================
+   6. Book Selector
+   ========================================================================== */
+
+.bible-book-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.bible-book-item {
+    padding: 0.5rem;
+    text-align: center;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    font-size: 0.875rem;
+}
+
+.bible-book-item:hover {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.bible-book-item.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+/* ==========================================================================
+   7. Chapter Navigator
+   ========================================================================== */
+
+.bible-chapter-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.bible-chapter-nav-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.bible-chapter-nav-btn:hover:not(:disabled) {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.bible-chapter-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.bible-chapter-info {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+/* ==========================================================================
+   8. Bookmark List
+   ========================================================================== */
+
+.bible-bookmark-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.bible-bookmark-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.bible-bookmark-item:hover {
+    border-color: var(--bs-primary);
+    background-color: #f8f9fa;
+}
+
+.bible-bookmark-reference {
+    font-weight: 500;
+}
+
+.bible-bookmark-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* ==========================================================================
+   9. Home Page Cards
+   ========================================================================== */
+
+.bible-home-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.bible-home-card {
+    padding: 1.5rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s ease-in-out;
+}
+
+.bible-home-card:hover {
+    border-color: var(--bs-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.bible-home-card-icon {
+    font-size: 2rem;
+    color: var(--bs-primary);
+    margin-bottom: 0.75rem;
+}
+
+.bible-home-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.bible-home-card-desc {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   10. Game Styles
+   ========================================================================== */
+
+.bible-game-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.bible-game-question {
+    padding: 1.5rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.bible-game-verse {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.bible-game-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.bible-game-option {
+    padding: 1rem;
+    text-align: center;
+    background-color: white;
+    border: 2px solid #dee2e6;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    font-weight: 500;
+}
+
+.bible-game-option:hover:not(.selected):not(.correct):not(.incorrect) {
+    border-color: var(--bs-primary);
+    background-color: #f0f7ff;
+}
+
+.bible-game-option.selected {
+    border-color: var(--bs-primary);
+    background-color: #e3f2fd;
+}
+
+.bible-game-option.correct {
+    border-color: #198754;
+    background-color: #d1e7dd;
+}
+
+.bible-game-option.incorrect {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.bible-game-score {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 1rem;
+}
+
+.bible-game-progress {
+    margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   11. Export Dialog
+   ========================================================================== */
+
+.bible-export-dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+}
+
+.bible-export-dialog.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bible-export-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.bible-export-content {
+    position: relative;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1;
+}
+
+.bible-export-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.bible-export-body {
+    padding: 1.5rem;
+}
+
+.bible-export-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.bible-export-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.bible-export-preview {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   12. Responsive Styles
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .bible-sub-nav {
+        flex-direction: column;
+    }
+
+    .bible-sub-nav-item {
+        text-align: center;
+    }
+
+    .bible-book-selector {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+
+    .bible-game-options {
+        grid-template-columns: 1fr;
+    }
+
+    .bible-home-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .bible-settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bible-settings-control {
+        width: 100%;
+    }
+}
+
+/* ==========================================================================
+   13. Utility Classes
+   ========================================================================== */
+
+.bible-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.bible-empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.bible-empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.bible-error {
+    padding: 1rem;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 0.375rem;
+    color: #721c24;
+}

@@ -488,5 +488,22 @@ window.CovenantPromptKey.keyboardShortcuts = {
     }
 };
 
+/**
+ * Download text content as a file
+ * @param {string} fileName - Name of the file to download
+ * @param {string} content - Text content to download
+ */
+window.downloadTextFile = function (fileName, content) {
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
 // Create alias for interop calls
 window.interop = window.CovenantPromptKey;

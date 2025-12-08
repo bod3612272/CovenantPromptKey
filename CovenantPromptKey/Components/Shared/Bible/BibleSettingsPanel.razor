@@ -1,0 +1,126 @@
+@using CovenantPromptKey.Models.Bible
+
+<div class="bible-settings-panel">
+    <div class="bible-settings-row">
+        <label class="bible-settings-label">字形</label>
+        <div class="bible-settings-control">
+            <select class="form-select form-select-sm" @bind="Settings.FontFamily" @bind:after="OnSettingsChanged">
+                <option value="@FontFamily.MicrosoftJhengHei">微軟正黑體</option>
+                <option value="@FontFamily.DFKai">標楷體</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bible-settings-row">
+        <label class="bible-settings-label">字體大小</label>
+        <div class="bible-settings-control d-flex align-items-center gap-2">
+            <input type="range" class="form-range" min="12" max="24" step="1" 
+                   @bind="Settings.FontSize" @bind:after="OnSettingsChanged" />
+            <span class="badge bg-secondary">@(Settings.FontSize)px</span>
+        </div>
+    </div>
+
+    <div class="bible-settings-row">
+        <label class="bible-settings-label">文字顏色</label>
+        <div class="bible-settings-control">
+            <div class="btn-group" role="group">
+                <button type="button" 
+                        class="btn btn-sm @(Settings.TextColor == TextColor.Black ? "btn-dark" : "btn-outline-dark")"
+                        @onclick="() => SetTextColor(TextColor.Black)">
+                    全黑
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.TextColor == TextColor.DarkGray ? "btn-secondary" : "btn-outline-secondary")"
+                        @onclick="() => SetTextColor(TextColor.DarkGray)">
+                    深灰
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.TextColor == TextColor.LightGray ? "btn-secondary" : "btn-outline-secondary")"
+                        style="@(Settings.TextColor == TextColor.LightGray ? "" : "color: #999;")"
+                        @onclick="() => SetTextColor(TextColor.LightGray)">
+                    淺灰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bible-settings-row">
+        <label class="bible-settings-label">背景顏色</label>
+        <div class="bible-settings-control">
+            <div class="btn-group flex-wrap" role="group">
+                <button type="button" 
+                        class="btn btn-sm @(Settings.BackgroundColor == BackgroundColor.White ? "btn-primary" : "btn-outline-secondary")"
+                        @onclick="() => SetBackgroundColor(BackgroundColor.White)">
+                    白色
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.BackgroundColor == BackgroundColor.Beige ? "btn-primary" : "btn-outline-secondary")"
+                        style="background-color: @(Settings.BackgroundColor == BackgroundColor.Beige ? "#FFF8DC" : ""); border-color: #FFF8DC;"
+                        @onclick="() => SetBackgroundColor(BackgroundColor.Beige)">
+                    米色
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.BackgroundColor == BackgroundColor.LightGray ? "btn-primary" : "btn-outline-secondary")"
+                        @onclick="() => SetBackgroundColor(BackgroundColor.LightGray)">
+                    淺灰
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.BackgroundColor == BackgroundColor.LightGreen ? "btn-primary" : "btn-outline-secondary")"
+                        style="background-color: @(Settings.BackgroundColor == BackgroundColor.LightGreen ? "#F0FFF0" : ""); border-color: #F0FFF0;"
+                        @onclick="() => SetBackgroundColor(BackgroundColor.LightGreen)">
+                    淺綠
+                </button>
+                <button type="button" 
+                        class="btn btn-sm @(Settings.BackgroundColor == BackgroundColor.NightMode ? "btn-dark" : "btn-outline-dark")"
+                        @onclick="() => SetBackgroundColor(BackgroundColor.NightMode)">
+                    夜間
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (ShowResetButton)
+    {
+        <div class="bible-settings-row">
+            <div class="bible-settings-control ms-auto">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ResetSettings">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>重置設定
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public BibleSettings Settings { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<BibleSettings> SettingsChanged { get; set; }
+
+    [Parameter]
+    public bool ShowResetButton { get; set; } = true;
+
+    private async Task OnSettingsChanged()
+    {
+        await SettingsChanged.InvokeAsync(Settings);
+    }
+
+    private async Task SetTextColor(TextColor color)
+    {
+        Settings.TextColor = color;
+        await OnSettingsChanged();
+    }
+
+    private async Task SetBackgroundColor(BackgroundColor color)
+    {
+        Settings.BackgroundColor = color;
+        await OnSettingsChanged();
+    }
+
+    private async Task ResetSettings()
+    {
+        Settings = new BibleSettings();
+        await OnSettingsChanged();
+    }
+}

@@ -1,0 +1,76 @@
+/* BibleHomePage 專用樣式 */
+
+/* 主容器調整 */
+::deep .bible-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 首頁卡片樣式增強 */
+::deep .bible-home-cards {
+    margin-top: 1rem;
+}
+
+::deep .bible-home-card {
+    display: block;
+}
+
+::deep .bible-home-card-icon i {
+    font-size: 2.5rem;
+}
+
+/* 最近閱讀區塊 */
+::deep .bible-bookmark-item {
+    color: inherit;
+}
+
+::deep .bible-bookmark-item:hover {
+    text-decoration: none;
+}
+
+/* 統計區塊與表格樣式 */
+::deep .bible-stats-card {
+    background: linear-gradient(135deg, #f9fbff 0%, #f3f6fb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+::deep .bible-stats-panel,
+::deep .bible-summary-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+::deep .bible-table-wrapper {
+    max-height: 420px;
+    overflow: auto;
+}
+
+::deep .bible-book-link {
+    font-weight: 600;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+::deep .bible-book-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+::deep .bg-primary-subtle {
+    background-color: #e7f1ff !important;
+    color: #0d6efd !important;
+}
+
+::deep .bg-success-subtle {
+    background-color: #e8f5e9 !important;
+    color: #198754 !important;
+}
+
+::deep .bible-summary-panel ul li + li {
+    margin-top: 0.35rem;
+}
