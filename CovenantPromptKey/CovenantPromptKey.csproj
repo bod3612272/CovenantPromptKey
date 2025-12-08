@@ -23,7 +23,7 @@
       
       ⚠️ 每次發布前請務必更新此版本號！
     -->
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
   </PropertyGroup>
 
   <!-- 單一檔案發布設定 (Self-Contained Single-File Publishing) -->
