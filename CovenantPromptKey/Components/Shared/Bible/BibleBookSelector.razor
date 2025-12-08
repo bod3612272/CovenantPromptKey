@@ -1,4 +1,5 @@
 @using CovenantPromptKey.Services.Interfaces
+@using CovenantPromptKey.Models
 
 <div class="bible-book-selector">
     <div class="d-flex align-items-center gap-3 mb-2">
@@ -45,6 +46,9 @@
     [Inject]
     private IBibleReadingService? ReadingService { get; set; }
 
+    [Inject]
+    private IDebugLogService? DebugLogService { get; set; }
+
     [Parameter]
     public int BookNumber { get; set; } = 1;
 
@@ -65,20 +69,27 @@
 
     protected override void OnInitialized()
     {
+        DebugLogService?.Log($"[BibleBookSelector] OnInitialized - BookNumber: {BookNumber}, ChapterNumber: {ChapterNumber}", Models.LogLevel.Info);
         _bookNames = ReadingService?.GetAllBookNames();
         selectedBookNumber = BookNumber > 0 ? BookNumber : 1;
         selectedChapterNumber = ChapterNumber > 0 ? ChapterNumber : 1;
+        DebugLogService?.Log($"[BibleBookSelector] OnInitialized 完成 - selectedBookNumber: {selectedBookNumber}, selectedChapterNumber: {selectedChapterNumber}", Models.LogLevel.Info);
     }
 
     protected override void OnParametersSet()
     {
+        DebugLogService?.Log($"[BibleBookSelector] OnParametersSet - BookNumber: {BookNumber}, ChapterNumber: {ChapterNumber}", Models.LogLevel.Info);
+        DebugLogService?.Log($"[BibleBookSelector] OnParametersSet - 目前 selectedBookNumber: {selectedBookNumber}, selectedChapterNumber: {selectedChapterNumber}", Models.LogLevel.Info);
+        
         if (BookNumber > 0 && BookNumber != selectedBookNumber)
         {
             selectedBookNumber = BookNumber;
+            DebugLogService?.Log($"[BibleBookSelector] 更新 selectedBookNumber 為: {BookNumber}", Models.LogLevel.Info);
         }
         if (ChapterNumber > 0 && ChapterNumber != selectedChapterNumber)
         {
             selectedChapterNumber = ChapterNumber;
+            DebugLogService?.Log($"[BibleBookSelector] 更新 selectedChapterNumber 為: {ChapterNumber}", Models.LogLevel.Info);
         }
     }
 

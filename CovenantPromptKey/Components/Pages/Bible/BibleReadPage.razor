@@ -178,9 +178,13 @@
     [Inject]
     private NavigationManager? NavigationManager { get; set; }
 
+    [Inject]
+    private IDebugLogService? DebugLogService { get; set; }
+
     private int currentBookNumber = 1;
     private int currentChapterNumber = 1;
     private int? highlightedVerseNumber;
+    private bool initializedFromUrl = false;
     private List<BibleData.VerseWithLocation>? verses;
     private BibleSettings settings = new();
     private bool isLoading = false;
@@ -204,23 +208,73 @@
 
     protected override void OnInitialized()
     {
+        DebugLogService?.Log($"[BibleReadPage] OnInitialized 開始", Models.LogLevel.Info);
+        DebugLogService?.Log($"[BibleReadPage] URL: {NavigationManager?.Uri}", Models.LogLevel.Info);
+        
         // 從 URL 參數初始化
         if (BookNumber > 0)
         {
             currentBookNumber = BookNumber;
+            initializedFromUrl = true;
+            DebugLogService?.Log($"[BibleReadPage] 從路由參數設定 BookNumber: {BookNumber}", Models.LogLevel.Info);
         }
         if (ChapterNumber > 0)
         {
             currentChapterNumber = ChapterNumber;
+            initializedFromUrl = true;
+            DebugLogService?.Log($"[BibleReadPage] 從路由參數設定 ChapterNumber: {ChapterNumber}", Models.LogLevel.Info);
         }
 
-        // 解析 query string 中的 verse 參數
+        // 解析 query string 參數
         var uri = NavigationManager?.ToAbsoluteUri(NavigationManager.Uri);
-        if (uri != null && System.Web.HttpUtility.ParseQueryString(uri.Query)["verse"] is string verseStr 
-            && int.TryParse(verseStr, out var verseNum))
+        if (uri != null)
         {
-            highlightedVerseNumber = verseNum;
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            DebugLogService?.Log($"[BibleReadPage] Query String: {uri.Query}", Models.LogLevel.Info);
+            
+            // 解析 book 參數（書卷名稱）
+            var bookQueryParam = queryParams["book"];
+            DebugLogService?.Log($"[BibleReadPage] book 參數: {bookQueryParam ?? "null"}", Models.LogLevel.Info);
+            
+            if (bookQueryParam is string bookName && !string.IsNullOrEmpty(bookName) && ReadingService != null)
+            {
+                DebugLogService?.Log($"[BibleReadPage] 嘗試查找書卷名稱: {bookName}", Models.LogLevel.Info);
+                var bookNumber = ReadingService.GetBookNumber(bookName);
+                DebugLogService?.Log($"[BibleReadPage] GetBookNumber 返回: {bookNumber}", Models.LogLevel.Info);
+                
+                if (bookNumber > 0)
+                {
+                    currentBookNumber = bookNumber;
+                    initializedFromUrl = true;
+                    DebugLogService?.Log($"[BibleReadPage] 設定 currentBookNumber: {bookNumber}", Models.LogLevel.Info);
+                }
+                else
+                {
+                    DebugLogService?.Log($"[BibleReadPage] 書卷名稱無效，保持預設值", Models.LogLevel.Warning);
+                }
+            }
+            
+            // 解析 chapter 參數
+            var chapterQueryParam = queryParams["chapter"];
+            DebugLogService?.Log($"[BibleReadPage] chapter 參數: {chapterQueryParam ?? "null"}", Models.LogLevel.Info);
+            
+            if (chapterQueryParam is string chapterStr && int.TryParse(chapterStr, out var chapterNum))
+            {
+                currentChapterNumber = chapterNum;
+                initializedFromUrl = true;
+                DebugLogService?.Log($"[BibleReadPage] 設定 currentChapterNumber: {chapterNum}", Models.LogLevel.Info);
+            }
+            
+            // 解析 verse 參數
+            var verseQueryParam = queryParams["verse"];
+            if (verseQueryParam is string verseStr && int.TryParse(verseStr, out var verseNum))
+            {
+                highlightedVerseNumber = verseNum;
+                DebugLogService?.Log($"[BibleReadPage] 設定 highlightedVerseNumber: {verseNum}", Models.LogLevel.Info);
+            }
         }
+        
+        DebugLogService?.Log($"[BibleReadPage] OnInitialized 完成 - currentBookNumber: {currentBookNumber}, currentChapterNumber: {currentChapterNumber}", Models.LogLevel.Info);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -237,20 +291,36 @@
     {
         if (firstRender)
         {
+            DebugLogService?.Log($"[BibleReadPage] OnAfterRenderAsync firstRender - currentBookNumber: {currentBookNumber}, currentChapterNumber: {currentChapterNumber}", Models.LogLevel.Info);
+            
             // 載入設定
             if (SettingsService != null)
             {
                 settings = await SettingsService.LoadSettingsAsync();
             }
 
-            // 如果沒有 URL 參數，從頁面狀態載入
-            if (BookNumber == 0 && ChapterNumber == 0 && PageStateService != null)
+            // 只有在沒有從 URL 參數或查詢參數初始化時，才從頁面狀態載入
+            if (!initializedFromUrl && PageStateService != null)
             {
+                DebugLogService?.Log($"[BibleReadPage] 嘗試從頁面狀態載入", Models.LogLevel.Info);
                 var state = await PageStateService.LoadReadPageStateAsync();
-                currentBookNumber = state.BookNumber > 0 ? state.BookNumber : 1;
-                currentChapterNumber = state.ChapterNumber > 0 ? state.ChapterNumber : 1;
+                if (state.BookNumber > 0)
+                {
+                    currentBookNumber = state.BookNumber;
+                    DebugLogService?.Log($"[BibleReadPage] 從頁面狀態載入 BookNumber: {state.BookNumber}", Models.LogLevel.Info);
+                }
+                if (state.ChapterNumber > 0)
+                {
+                    currentChapterNumber = state.ChapterNumber;
+                    DebugLogService?.Log($"[BibleReadPage] 從頁面狀態載入 ChapterNumber: {state.ChapterNumber}", Models.LogLevel.Info);
+                }
+            }
+            else
+            {
+                DebugLogService?.Log($"[BibleReadPage] 跳過頁面狀態載入（initializedFromUrl={initializedFromUrl}）", Models.LogLevel.Info);
             }
 
+            DebugLogService?.Log($"[BibleReadPage] 準備載入章節 - BookNumber: {currentBookNumber}, ChapterNumber: {currentChapterNumber}", Models.LogLevel.Info);
             await LoadChapter();
             StateHasChanged();
         }
