@@ -12,6 +12,7 @@
 - [常見誤解與錯誤範例](#常見誤解與錯誤範例)
 - [API 查詢建議](#api-查詢建議)
 - [單元測試注意事項](#單元測試注意事項)
+ - [搜尋 API 速覽](#搜尋-api-速覽)
 
 ---
 
@@ -168,6 +169,22 @@ foreach (var v in results)
 
 ---
 
+## 搜尋 API 速覽
+
+- `Search(keyword, comparisonType)` / `SearchIgnoreCase(keyword)`: 全掃描搜尋，回傳所有符合經文。
+- `SearchInBook(bookName, keyword)`: 限定書卷的搜尋。
+- `SearchTop(keyword, topN, comparisonType)` / `SearchTopIgnoreCase(keyword, topN)`: 回傳前 N 筆即時結果。
+- `SearchTopWithCancellation(keyword, topN, cancellationToken, comparisonType)`: 邊輸入邊搜尋時可用取消權杖中止迴圈。
+- `SearchTopRanked(keyword, topN, comparisonType)`: 依出現位置與次數計分，回傳前 N 筆排名結果。
+- `SearchByPrefix(prefix, topN)`: 經文以指定前綴開頭的結果。
+- `SearchMultipleKeywords(keywords, topN, comparisonType)`: AND 條件，需同時包含多個關鍵字。
+- `SearchAnyKeyword(keywords, topN, comparisonType)`: OR 條件，任一關鍵字即可。
+- `GetRandomVerse(random?)`: 隨機取一節，可傳入自訂 `Random` 以重現結果。
+
+> 提示：即時搜尋（`SearchTop*`）本質仍是線性掃描，建議在應用啟動時先建立一次 `BibleIndex` 並重複使用，避免重建索引的成本。
+
+---
+
 ## 單元測試注意事項
 
 ### 這個測試**會失敗**（但這是預期行為）
@@ -265,7 +282,7 @@ public void BibleStaticData_NewTestament_ShouldHave27Books()
 
 ## 版本資訊
 
-- 文件版本：1.0
-- 最後更新：2025-12-07
+- 文件版本：1.1
+- 最後更新：2025-12-08
 - 適用於：BibleData DLL
 
