@@ -1,6 +1,7 @@
 # CovenantPromptKey
 
-<div align="center">
+<div align="center"> 
+  
   <img src="CovenantPromptKey/wwwroot/favicon.png" alt="CovenantPromptKey Logo" width="128" height="128">
   
   **互動式關鍵字替換介面 | 聖經查詢系統**
@@ -9,6 +10,7 @@
   [![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor)](https://blazor.net/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
   [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://www.microsoft.com/windows)
+
 </div>
 
 ---
@@ -34,6 +36,8 @@
 - **工作階段保存**：自動儲存工作狀態，避免刷新頁面導致資料遺失
 - **Debug Log 追蹤**：完整的操作日誌記錄，方便問題排查
 
+![CovenantPromptKey：您的 AI 對話隱私守護神](Image/imagePrompt.png)
+
 ### 📖 聖經查詢系統
 
 - **經文搜尋**：支援關鍵字搜尋、模糊搜尋、多關鍵字 AND 搜尋
@@ -42,6 +46,8 @@
 - **書籤管理**：自動記錄最近閱讀的經文（最多 10 筆）
 - **經文導出**：支援三種 Markdown 格式導出
 - **經文猜猜遊戲**：透過遊戲熟悉聖經經文出處，含錯題複習功能
+
+![CovenantPromptKey 聖經查詢系統功能一覽](Image/imageBible.png) 
 
 ---
 
