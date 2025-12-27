@@ -2,6 +2,14 @@
 
 **Branch**: `001-add-wasm-hosting` | **Date**: 2025-12-26 | **Spec**: [specs/001-add-wasm-hosting/spec.md](specs/001-add-wasm-hosting/spec.md)
 
+## Cross-links
+
+- Task tracker: [specs/001-add-wasm-hosting/tasks.md](specs/001-add-wasm-hosting/tasks.md)
+- Quickstart (run/publish): [specs/001-add-wasm-hosting/quickstart.md](specs/001-add-wasm-hosting/quickstart.md)
+- Contracts (acceptance requirements): [specs/001-add-wasm-hosting/contracts/](specs/001-add-wasm-hosting/contracts/)
+- Security audit (MarkupString/injection surfaces): [specs/001-add-wasm-hosting/security/markupstring-audit.md](specs/001-add-wasm-hosting/security/markupstring-audit.md)
+- Validation evidence: [specs/001-add-wasm-hosting/validation-notes.md](specs/001-add-wasm-hosting/validation-notes.md)
+
 ## Summary
 
 目標是「雙宿主」：保留現有 Server host（目前是 Blazor Web App + Interactive Server），另外新增一個 client-side host（Blazor WebAssembly）。

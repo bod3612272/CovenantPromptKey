@@ -1,0 +1,139 @@
+@using CovenantPromptKey.Models.Bible
+
+@* 支援單個經文或多個經文的顯示 *@
+@if (Verse != null)
+{
+    <div class="bible-verse-wrapper" style="@GetWrapperStyle()">
+        <div class="bible-verse-line @(IsHighlighted ? "bible-verse-highlighted" : "")" style="@GetLineStyle()">
+            <span class="bible-verse-number" style="color: @GetPrimaryColor();">
+                @Verse.VerseNumber
+            </span>
+            <span class="bible-verse-content">
+                @if (!string.IsNullOrEmpty(HighlightKeyword))
+                {
+                    @((MarkupString)HighlightText(Verse.Content))
+                }
+                else
+                {
+                    @Verse.Content
+                }
+            </span>
+        </div>
+    </div>
+}
+else if (Verses != null && Verses.Any())
+{
+    <div class="bible-verse-container" style="@GetContainerStyle()">
+        @foreach (var verse in Verses)
+        {
+            <div class="bible-verse-line" style="@GetLineStyle()">
+                <span class="bible-verse-number" style="color: @GetPrimaryColor();">
+                    @verse.VerseNumber
+                </span>
+                <span class="bible-verse-content">
+                    @if (!string.IsNullOrEmpty(HighlightKeyword))
+                    {
+                        @((MarkupString)HighlightText(verse.Content))
+                    }
+                    else
+                    {
+                        @verse.Content
+                    }
+                </span>
+            </div>
+        }
+    </div>
+}
+else if (IsLoading)
+{
+    <div class="bible-loading">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">載入中...</span>
+        </div>
+        載入中...
+    </div>
+}
+else
+{
+    <div class="bible-empty-state">
+        <div class="bible-empty-state-icon">
+            <i class="bi bi-book"></i>
+        </div>
+        <p>請選擇書卷與章節以開始閱讀</p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public VerseWithLocation? Verse { get; set; }
+
+    [Parameter]
+    public List<VerseWithLocation>? Verses { get; set; }
+
+    [Parameter]
+    public BibleSettings Settings { get; set; } = new();
+
+    [Parameter]
+    public string? HighlightKeyword { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool IsHighlighted { get; set; }
+
+    private string GetWrapperStyle()
+    {
+        var bgColor = BibleStyleHelper.GetBackgroundColorHex(Settings.BackgroundColor);
+        return $"background-color: {bgColor}; padding: 0.25rem 0;";
+    }
+
+    private string GetLineStyle()
+    {
+        var fontFamily = BibleStyleHelper.GetFontFamilyCss(Settings.FontFamily);
+        var textColor = Settings.BackgroundColor == BackgroundColor.NightMode 
+            ? "#FFFFFF" 
+            : BibleStyleHelper.GetTextColorHex(Settings.TextColor);
+
+        return $"font-family: {fontFamily}; font-size: {Settings.FontSize}px; color: {textColor};";
+    }
+
+    private string GetContainerStyle()
+    {
+        var fontFamily = BibleStyleHelper.GetFontFamilyCss(Settings.FontFamily);
+        var bgColor = BibleStyleHelper.GetBackgroundColorHex(Settings.BackgroundColor);
+        var textColor = Settings.BackgroundColor == BackgroundColor.NightMode 
+            ? "#FFFFFF" 
+            : BibleStyleHelper.GetTextColorHex(Settings.TextColor);
+
+        return $"font-family: {fontFamily}; font-size: {Settings.FontSize}px; background-color: {bgColor}; color: {textColor};";
+    }
+
+    private string GetPrimaryColor()
+    {
+        return Settings.BackgroundColor == BackgroundColor.NightMode 
+            ? "#6ea8fe"  // Lighter blue for night mode
+            : "var(--bs-primary)";
+    }
+
+    private string HighlightText(string text)
+    {
+        if (string.IsNullOrEmpty(HighlightKeyword) || string.IsNullOrEmpty(text))
+            return text;
+
+        var keywords = HighlightKeyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var result = text;
+
+        foreach (var keyword in keywords)
+        {
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                result = result.Replace(keyword, 
+                    $"<span class=\"bible-verse-highlight\">{keyword}</span>", 
+                    StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return result;
+    }
+}

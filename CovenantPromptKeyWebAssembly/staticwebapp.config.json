@@ -1,0 +1,20 @@
+{
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';"
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/_framework/*",
+      "/_content/*",
+      "/*.css",
+      "/*.js",
+      "/*.png",
+      "/*.ico",
+      "/*.json",
+      "/*.webmanifest",
+      "/*.woff2",
+      "/*.map"
+    ]
+  }
+}

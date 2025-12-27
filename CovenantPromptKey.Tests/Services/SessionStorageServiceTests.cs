@@ -1,5 +1,5 @@
 using System.Text.Json;
-using CovenantPromptKey.Services.Implementations;
+using CovenantPromptKey.Browser.Implementations;
 using CovenantPromptKey.Services.Interfaces;
 using Microsoft.JSInterop;
 using NSubstitute;
@@ -31,7 +31,7 @@ public class SessionStorageServiceTests
         var expectedValue = new TestData { Name = "Test", Value = 42 };
         var jsonValue = JsonSerializer.Serialize(expectedValue);
         
-        _jsRuntime.InvokeAsync<string?>("sessionStorage.getItem", Arg.Is<object[]>(args => args.Length == 1 && args[0].ToString() == key))
+        _jsRuntime.InvokeAsync<string?>("CovenantPromptKey.storage.session.getItem", Arg.Is<object[]>(args => args.Length == 1 && args[0].ToString() == key))
             .Returns(new ValueTask<string?>(jsonValue));
 
         // Act
@@ -49,7 +49,7 @@ public class SessionStorageServiceTests
         // Arrange
         const string key = "nonExistentKey";
         
-        _jsRuntime.InvokeAsync<string?>("sessionStorage.getItem", Arg.Any<object[]>())
+        _jsRuntime.InvokeAsync<string?>("CovenantPromptKey.storage.session.getItem", Arg.Any<object[]>())
             .Returns(new ValueTask<string?>((string?)null));
 
         // Act
@@ -65,7 +65,7 @@ public class SessionStorageServiceTests
         // Arrange
         const string key = "invalidJsonKey";
         
-        _jsRuntime.InvokeAsync<string?>("sessionStorage.getItem", Arg.Any<object[]>())
+        _jsRuntime.InvokeAsync<string?>("CovenantPromptKey.storage.session.getItem", Arg.Any<object[]>())
             .Returns(new ValueTask<string?>("invalid json {"));
 
         // Act
@@ -83,7 +83,7 @@ public class SessionStorageServiceTests
         const string expectedValue = "Hello World";
         var jsonValue = JsonSerializer.Serialize(expectedValue);
         
-        _jsRuntime.InvokeAsync<string?>("sessionStorage.getItem", Arg.Any<object[]>())
+        _jsRuntime.InvokeAsync<string?>("CovenantPromptKey.storage.session.getItem", Arg.Any<object[]>())
             .Returns(new ValueTask<string?>(jsonValue));
 
         // Act
@@ -109,7 +109,7 @@ public class SessionStorageServiceTests
 
         // Assert
         await _jsRuntime.Received(1).InvokeAsync<Microsoft.JSInterop.Infrastructure.IJSVoidResult>(
-            "sessionStorage.setItem",
+            "CovenantPromptKey.storage.session.setItem",
             Arg.Is<object[]>(args => 
                 args.Length == 2 && 
                 args[0].ToString() == key));
@@ -126,7 +126,7 @@ public class SessionStorageServiceTests
 
         // Assert
         await _jsRuntime.Received(1).InvokeAsync<Microsoft.JSInterop.Infrastructure.IJSVoidResult>(
-            "sessionStorage.setItem",
+            "CovenantPromptKey.storage.session.setItem",
             Arg.Any<object[]>());
     }
 
@@ -145,7 +145,7 @@ public class SessionStorageServiceTests
 
         // Assert
         await _jsRuntime.Received(1).InvokeAsync<Microsoft.JSInterop.Infrastructure.IJSVoidResult>(
-            "sessionStorage.removeItem", 
+            "CovenantPromptKey.storage.session.removeItem", 
             Arg.Any<object[]>());
     }
 
@@ -161,7 +161,7 @@ public class SessionStorageServiceTests
 
         // Assert
         await _jsRuntime.Received(1).InvokeAsync<Microsoft.JSInterop.Infrastructure.IJSVoidResult>(
-            "sessionStorage.clear",
+            "CovenantPromptKey.storage.session.clear",
             Arg.Any<object[]>());
     }
 

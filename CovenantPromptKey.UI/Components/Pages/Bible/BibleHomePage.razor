@@ -1,0 +1,464 @@
+﻿@page "/bible"
+
+<PageTitle>聖經 - CovenantPromptKey</PageTitle>
+
+<link href="css/bible.css" rel="stylesheet" />
+
+<div class="bible-container">
+    <div class="bible-page-header">
+        <h1 class="bible-page-title">
+            <i class="bi bi-book me-2"></i>聖經
+        </h1>
+    </div>
+
+    <BibleSubNavigation />
+
+    <div class="bible-home-cards">
+        <a href="/bible/search" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-search"></i>
+            </div>
+            <div class="bible-home-card-title">聖經查詢</div>
+            <div class="bible-home-card-desc">
+                輸入關鍵字搜尋經文，支援即時搜尋建議與多關鍵字查詢
+            </div>
+        </a>
+
+        <a href="/bible/read" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <div class="bible-home-card-title">聖經閱讀</div>
+            <div class="bible-home-card-desc">
+                選擇書卷章節進行閱讀，支援書籤與閱讀記錄
+            </div>
+        </a>
+
+        <a href="/bible/game" class="bible-home-card">
+            <div class="bible-home-card-icon">
+                <i class="bi bi-controller"></i>
+            </div>
+            <div class="bible-home-card-title">聖經遊戲</div>
+            <div class="bible-home-card-desc">
+                經文猜猜遊戲，測試您對聖經的熟悉程度
+            </div>
+        </a>
+    </div>
+
+    @if (recentBookmarks.Any())
+    {
+        <div class="mt-4">
+            <BibleBookmarkList 
+                Bookmarks="@recentBookmarks"
+                IsLoading="@isLoadingBookmarks"
+                ShowTitle="true"
+                ShowDate="true"
+                ShowRemoveButton="true"
+                ShowClearButton="true"
+                MaxDisplay="5"
+                OnBookmarkRemove="OnBookmarkRemoved"
+                OnClearAll="OnClearAllBookmarks" />
+        </div>
+    }
+
+    <div class="mt-4">
+        <div class="bible-stats-card">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-info-circle me-2 text-primary"></i>
+                <div>
+                    <div class="fw-semibold">關於聖經資料</div>
+                    <small class="text-muted">Authoritative dataset · 和合本 (CUV)</small>
+                </div>
+            </div>
+            <p class="mb-1 text-muted small">
+                本系統使用和合本聖經，涵蓋舊約 39 卷、新約 27 卷，共 66 卷書。
+            </p>
+            <p class="mb-3 text-muted small">
+                總計 @FormatNumber(totalChapters) 章、@FormatNumber(totalVerses) 節經文，約 @FormatNumber(totalWords) 字。
+            </p>
+
+            @if (HasStatistics)
+            {
+                <div class="row g-3">
+                    <div class="col-12 col-xl-6">
+                        <div class="bible-stats-panel h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div>
+                                    <div class="fw-semibold">舊約聖經（@oldTestamentBooks.Count 卷）</div>
+                                    <small class="text-muted">From Genesis to Malachi</small>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary">@FormatNumber(oldTestamentBooks.Sum(b => b.ChapterCount)) 章</span>
+                            </div>
+                            <div class="bible-table-wrapper">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col" class="text-center" style="width: 60px;">卷號</th>
+                                            <th scope="col">書卷名稱</th>
+                                            <th scope="col" class="text-end" style="width: 90px;">章數</th>
+                                            <th scope="col" class="text-end" style="width: 90px;">節數</th>
+                                            <th scope="col" class="text-end" style="width: 110px;">字數</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var book in oldTestamentBooks)
+                                        {
+                                            <tr>
+                                                <td class="text-center fw-semibold">@book.BookNumber</td>
+                                                <td>
+                                                    <a class="bible-book-link" href="@($"/bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
+                                                </td>
+                                                <td class="text-end">@FormatNumber(book.ChapterCount)</td>
+                                                <td class="text-end">@FormatNumber(book.VerseCount)</td>
+                                                <td class="text-end text-muted">@FormatNumber(book.WordCount)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-6">
+                        <div class="bible-stats-panel h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div>
+                                    <div class="fw-semibold">新約聖經（@newTestamentBooks.Count 卷）</div>
+                                    <small class="text-muted">From Matthew to Revelation</small>
+                                </div>
+                                <span class="badge bg-success-subtle text-success">@FormatNumber(newTestamentBooks.Sum(b => b.ChapterCount)) 章</span>
+                            </div>
+                            <div class="bible-table-wrapper">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col" class="text-center" style="width: 60px;">卷號</th>
+                                            <th scope="col">書卷名稱</th>
+                                            <th scope="col" class="text-end" style="width: 90px;">章數</th>
+                                            <th scope="col" class="text-end" style="width: 90px;">節數</th>
+                                            <th scope="col" class="text-end" style="width: 110px;">字數</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var book in newTestamentBooks)
+                                        {
+                                            <tr>
+                                                <td class="text-center fw-semibold">@book.BookNumber</td>
+                                                <td>
+                                                    <a class="bible-book-link" href="@($"/bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
+                                                </td>
+                                                <td class="text-end">@FormatNumber(book.ChapterCount)</td>
+                                                <td class="text-end">@FormatNumber(book.VerseCount)</td>
+                                                <td class="text-end text-muted">@FormatNumber(book.WordCount)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-12 col-xl-5">
+                        <div class="bible-summary-panel h-100">
+                            <div class="fw-semibold mb-2">全本聖經總計</div>
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">總卷數</th>
+                                        <td class="text-end fw-semibold">@FormatNumber(summaryMetrics.TotalBooks) 卷</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">總章數</th>
+                                        <td class="text-end fw-semibold">@FormatNumber(summaryMetrics.TotalChapters) 章</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">總節數</th>
+                                        <td class="text-end fw-semibold">@FormatNumber(summaryMetrics.TotalVerses) 節</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">總字數</th>
+                                        <td class="text-end fw-semibold">@FormatNumber(summaryMetrics.TotalWords) 字</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-7">
+                        <div class="bible-summary-panel h-100">
+                            <div class="fw-semibold mb-2">關鍵統計觀察</div>
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li>
+                                    <strong>章數最多：</strong>
+                                    @summaryMetrics.MostChapters?.BookName (@FormatNumber(summaryMetrics.MostChapters?.ChapterCount ?? 0) 章)
+                                </li>
+                                <li>
+                                    <strong>章數最少：</strong>
+                                    @summaryMetrics.FewestChapters?.BookName (@FormatNumber(summaryMetrics.FewestChapters?.ChapterCount ?? 0) 章)
+                                </li>
+                                <li>
+                                    <strong>節數最多：</strong>
+                                    @summaryMetrics.MostVerses?.BookName (@FormatNumber(summaryMetrics.MostVerses?.VerseCount ?? 0) 節)
+                                </li>
+                                <li>
+                                    <strong>節數最少：</strong>
+                                    @summaryMetrics.FewestVerses?.BookName (@FormatNumber(summaryMetrics.FewestVerses?.VerseCount ?? 0) 節)
+                                </li>
+                                <li>
+                                    <strong>字數最多：</strong>
+                                    @summaryMetrics.MostWords?.BookName (@FormatNumber(summaryMetrics.MostWords?.WordCount ?? 0) 字)
+                                </li>
+                                <li>
+                                    <strong>字數最少：</strong>
+                                    @summaryMetrics.FewestWords?.BookName (@FormatNumber(summaryMetrics.FewestWords?.WordCount ?? 0) 字)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0">尚未載入統計資料，請稍候重新整理再試。</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IBibleBookmarkService? BookmarkService { get; set; }
+
+    [Inject]
+    private BibleIndex? BibleIndex { get; set; }
+
+    [Inject]
+    private IDebugLogService? DebugLogService { get; set; }
+
+    private List<BibleBookmark> recentBookmarks = new();
+    private bool isLoadingBookmarks = false;
+    private int totalChapters = 0;
+    private int totalVerses = 0;
+    private int totalWords = 0;
+    private List<BookStatistics> oldTestamentBooks = new();
+    private List<BookStatistics> newTestamentBooks = new();
+    private BibleSummaryMetrics summaryMetrics = new();
+
+    private bool HasStatistics => oldTestamentBooks.Any() || newTestamentBooks.Any();
+
+    protected override async Task OnInitializedAsync()
+    {
+        DebugLogService?.Log("BibleHomePage.OnInitializedAsync 開始", Models.LogLevel.Info, "BibleHomePage");
+        
+        if (BibleIndex == null)
+        {
+            DebugLogService?.Log("BibleIndex 為 null，無法載入統計資料", Models.LogLevel.Warning, "BibleHomePage");
+        }
+        else
+        {
+            DebugLogService?.Log($"BibleIndex 已注入，BookNames 數量: {BibleIndex.BookNames.Count}", Models.LogLevel.Info, "BibleHomePage");
+            
+            BuildBookStatistics();
+            
+            DebugLogService?.Log($"統計資料建立完成 - 舊約: {oldTestamentBooks.Count} 卷, 新約: {newTestamentBooks.Count} 卷", Models.LogLevel.Info, "BibleHomePage");
+            DebugLogService?.Log($"HasStatistics: {HasStatistics}, TotalBooks: {summaryMetrics.TotalBooks}", Models.LogLevel.Info, "BibleHomePage");
+            
+            totalChapters = summaryMetrics.TotalChapters;
+            totalVerses = summaryMetrics.TotalVerses;
+            totalWords = summaryMetrics.TotalWords;
+        }
+        
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && BookmarkService != null)
+        {
+            await LoadBookmarks();
+        }
+    }
+
+    private async Task LoadBookmarks()
+    {
+        isLoadingBookmarks = true;
+        StateHasChanged();
+
+        try
+        {
+            if (BookmarkService != null)
+            {
+                recentBookmarks = await BookmarkService.LoadBookmarksAsync();
+            }
+        }
+        catch
+        {
+            // Ignore errors during bookmark loading
+        }
+        finally
+        {
+            isLoadingBookmarks = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnBookmarkRemoved(BibleBookmark bookmark)
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.RemoveBookmarkAsync(bookmark);
+            await LoadBookmarks();
+        }
+    }
+
+    private async Task OnClearAllBookmarks()
+    {
+        if (BookmarkService != null)
+        {
+            await BookmarkService.ClearAllBookmarksAsync();
+            recentBookmarks.Clear();
+            StateHasChanged();
+        }
+    }
+
+    private void BuildBookStatistics()
+    {
+        if (BibleIndex == null)
+        {
+            DebugLogService?.Log("BuildBookStatistics: BibleIndex 為 null", Models.LogLevel.Warning, "BibleHomePage");
+            return;
+        }
+
+        var allStats = new List<BookStatistics>();
+        var bookNames = BibleIndex.BookNames.ToList();
+        
+        DebugLogService?.Log($"BuildBookStatistics: 開始處理 {bookNames.Count} 本書卷", Models.LogLevel.Info, "BibleHomePage");
+
+        foreach (var item in bookNames.Select((name, index) => new { name, index }))
+        {
+            var book = BibleIndex.GetBook(item.name);
+            if (book == null)
+            {
+                DebugLogService?.Log($"BuildBookStatistics: 無法取得書卷 '{item.name}'", Models.LogLevel.Warning, "BibleHomePage");
+                continue;
+            }
+
+            var testament = BibleIndex.GetTestament(item.name) ?? book.Testament ?? string.Empty;
+            
+            if (string.IsNullOrEmpty(testament))
+            {
+                DebugLogService?.Log($"BuildBookStatistics: 書卷 '{item.name}' 的約別為空", Models.LogLevel.Warning, "BibleHomePage");
+            }
+
+            var chapterCount = book.Chapters.Count;
+            var verseCount = book.Chapters.Sum(c => c.Verses.Count);
+            var wordCount = book.Chapters.Sum(c => c.Verses.Sum(v => CalculateWordCount(v.Content)));
+
+            allStats.Add(new BookStatistics
+            {
+                BookNumber = item.index + 1,
+                BookName = item.name,
+                ChapterCount = chapterCount,
+                VerseCount = verseCount,
+                WordCount = wordCount,
+                Testament = testament,
+                ActualBookNumber = book.Number
+            });
+        }
+
+        DebugLogService?.Log($"BuildBookStatistics: 共收集 {allStats.Count} 本書卷統計", Models.LogLevel.Info, "BibleHomePage");
+        
+        oldTestamentBooks = allStats
+            .Where(b => IsOldTestament(b.Testament))
+            .ToList();
+            
+        DebugLogService?.Log($"BuildBookStatistics: 舊約書卷 {oldTestamentBooks.Count} 本", Models.LogLevel.Info, "BibleHomePage");
+        if (oldTestamentBooks.Any())
+        {
+            DebugLogService?.Log($"  舊約範例: {string.Join(", ", oldTestamentBooks.Take(3).Select(b => $"{b.BookName}({b.Testament})"))}", Models.LogLevel.Info, "BibleHomePage");
+        }
+
+        newTestamentBooks = allStats
+            .Where(b => IsNewTestament(b.Testament))
+            .ToList();
+            
+        DebugLogService?.Log($"BuildBookStatistics: 新約書卷 {newTestamentBooks.Count} 本", Models.LogLevel.Info, "BibleHomePage");
+        if (newTestamentBooks.Any())
+        {
+            DebugLogService?.Log($"  新約範例: {string.Join(", ", newTestamentBooks.Take(3).Select(b => $"{b.BookName}({b.Testament})"))}", Models.LogLevel.Info, "BibleHomePage");
+        }
+
+        summaryMetrics = new BibleSummaryMetrics
+        {
+            TotalBooks = allStats.Count,
+            TotalChapters = allStats.Sum(b => b.ChapterCount),
+            TotalVerses = allStats.Sum(b => b.VerseCount),
+            TotalWords = allStats.Sum(b => b.WordCount),
+            MostChapters = allStats.OrderByDescending(b => b.ChapterCount).FirstOrDefault(),
+            FewestChapters = allStats.OrderBy(b => b.ChapterCount).FirstOrDefault(),
+            MostVerses = allStats.OrderByDescending(b => b.VerseCount).FirstOrDefault(),
+            FewestVerses = allStats.OrderBy(b => b.VerseCount).FirstOrDefault(),
+            MostWords = allStats.OrderByDescending(b => b.WordCount).FirstOrDefault(),
+            FewestWords = allStats.OrderBy(b => b.WordCount).FirstOrDefault()
+        };
+        
+        DebugLogService?.Log($"BuildBookStatistics: 完成！總計 {summaryMetrics.TotalBooks} 卷, {summaryMetrics.TotalChapters} 章, {summaryMetrics.TotalVerses} 節", Models.LogLevel.Info, "BibleHomePage");
+    }
+
+    private static int CalculateWordCount(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return 0;
+        }
+
+        return content.Count(c => !char.IsWhiteSpace(c));
+    }
+
+    private static bool IsOldTestament(string testament)
+    {
+        return string.Equals(testament, BibleData.Models.Testament.Old, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "Old Testament", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "舊約", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "OT", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsNewTestament(string testament)
+    {
+        return string.Equals(testament, BibleData.Models.Testament.New, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "New Testament", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "新約", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(testament, "NT", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string FormatNumber(int value)
+    {
+        return value.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private class BookStatistics
+    {
+        public int BookNumber { get; set; }
+        public string BookName { get; set; } = string.Empty;
+        public int ChapterCount { get; set; }
+        public int VerseCount { get; set; }
+        public int WordCount { get; set; }
+        public string Testament { get; set; } = string.Empty;
+        public int ActualBookNumber { get; set; }
+    }
+
+    private class BibleSummaryMetrics
+    {
+        public int TotalBooks { get; set; }
+        public int TotalChapters { get; set; }
+        public int TotalVerses { get; set; }
+        public int TotalWords { get; set; }
+        public BookStatistics? MostChapters { get; set; }
+        public BookStatistics? FewestChapters { get; set; }
+        public BookStatistics? MostVerses { get; set; }
+        public BookStatistics? FewestVerses { get; set; }
+        public BookStatistics? MostWords { get; set; }
+        public BookStatistics? FewestWords { get; set; }
+    }
+}
+

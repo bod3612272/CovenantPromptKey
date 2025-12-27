@@ -1,0 +1,462 @@
+﻿@page "/bible/game"
+
+<PageTitle>聖經遊戲 - CovenantPromptKey</PageTitle>
+
+<link href="css/bible.css" rel="stylesheet" />
+
+<div class="bible-container">
+    <div class="bible-page-header">
+        <h1 class="bible-page-title">
+            <i class="bi bi-controller me-2"></i>聖經遊戲
+        </h1>
+    </div>
+
+    <BibleSubNavigation />
+
+    <!-- 遊戲選擇 -->
+    @if (gameState == GameState.Menu)
+    {
+        <div class="bible-game-menu">
+            <div class="row g-4">
+                <!-- 遊戲 1：猜書卷 -->
+                <div class="col-md-6">
+                    <div class="bible-game-card h-100" @onclick="StartGame">
+                        <div class="bible-game-card-icon">
+                            <i class="bi bi-question-circle"></i>
+                        </div>
+                        <h4>經文猜猜樂</h4>
+                        <p class="text-muted">
+                            閱讀經文內容，猜猜它出自哪一卷書！
+                            <br />共 10 題，測試您對聖經的熟悉程度。
+                        </p>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill me-1"></i>開始遊戲
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 遊戲 2：敬請期待 -->
+                <div class="col-md-6">
+                    <div class="bible-game-card h-100 disabled">
+                        <div class="bible-game-card-icon text-muted">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <h4 class="text-muted">更多遊戲</h4>
+                        <p class="text-muted">
+                            敬請期待...
+                            <br />我們正在開發更多有趣的聖經遊戲！
+                        </p>
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="bi bi-clock me-1"></i>敬請期待
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲記錄 -->
+            @if (gameRecords != null && (gameRecords.HighScore > 0 || gameRecords.RecentSessions.Any()))
+            {
+                <div class="mt-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-trophy me-2"></i>遊戲記錄
+                    </h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 col-md-3 text-center border-end">
+                                    <div class="fs-2 fw-bold text-primary">@gameRecords.HighScore</div>
+                                    <div class="text-muted small">最高分</div>
+                                </div>
+                                <div class="col-6 col-md-3 text-center border-end-md">
+                                    <div class="fs-2 fw-bold">@gameRecords.RecentSessions.Count</div>
+                                    <div class="text-muted small">最近遊戲</div>
+                                </div>
+                                @if (gameRecords.RecentSessions.Any())
+                                {
+                                    <div class="col-12 col-md-6 mt-3 mt-md-0">
+                                        <div class="small text-muted mb-1">最近 5 場</div>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            @foreach (var session in gameRecords.RecentSessions.Take(5))
+                                            {
+                                                <span class="badge @(session.Score >= 8 ? "bg-success" : session.Score >= 5 ? "bg-warning text-dark" : "bg-danger")">
+                                                    @session.Score/10
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="mt-3 text-end">
+                                <button class="btn btn-sm btn-outline-danger" @onclick="ClearGameRecords">
+                                    <i class="bi bi-trash me-1"></i>清除記錄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- 錯題複習 -->
+            @if (wrongAnswers != null && wrongAnswers.TotalWrongAnswers > 0)
+            {
+                <div class="mt-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-journal-x me-2"></i>錯題複習
+                        <span class="badge bg-secondary ms-2">@wrongAnswers.TotalWrongAnswers 題</span>
+                    </h5>
+                    <div class="card">
+                        <div class="card-body">
+                            @if (showWrongAnswers)
+                            {
+                                <div class="bible-wrong-answer-list">
+                                    @foreach (var session in wrongAnswers.Sessions)
+                                    {
+                                        <div class="mb-3">
+                                            <div class="small text-muted mb-2">
+                                                @session.PlayedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
+                                            </div>
+                                            @foreach (var wrong in session.WrongAnswers)
+                                            {
+                                                <div class="bible-wrong-answer-item">
+                                                    <div class="bible-wrong-answer-verse">
+                                                        "@wrong.VerseContent"
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                                        <span class="text-danger small">
+                                                            <i class="bi bi-x-circle me-1"></i>
+                                                            選擇：@wrong.SelectedAnswer
+                                                        </span>
+                                                        <span class="text-success small">
+                                                            <i class="bi bi-check-circle me-1"></i>
+                                                            正確：@wrong.CorrectAnswer
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-muted small mt-1">
+                                                        出處：@wrong.VerseReference
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="ToggleWrongAnswers">
+                                    <i class="bi @(showWrongAnswers ? "bi-chevron-up" : "bi-chevron-down") me-1"></i>
+                                    @(showWrongAnswers ? "收起" : "展開檢視")
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="ClearWrongAnswers">
+                                    <i class="bi bi-trash me-1"></i>清除錯題
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- 遊戲進行中 -->
+    @if (gameState == GameState.Playing && currentQuestion != null)
+    {
+        <div class="bible-game-playing">
+            <!-- 進度列 -->
+            <div class="bible-game-progress mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>題目 @currentQuestionIndex / @questions.Count</span>
+                    <span>得分：@score / @currentQuestionIndex</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: @((currentQuestionIndex * 100 / questions.Count))%"></div>
+                </div>
+            </div>
+
+            <!-- 題目卡片 -->
+            <div class="bible-game-question-card">
+                <div class="bible-game-question-header">
+                    <span class="badge bg-primary">第 @currentQuestion.QuestionNumber 題</span>
+                </div>
+                <div class="bible-game-question-content">
+                    <p class="fs-5 lh-lg">「@currentQuestion.Verse.Content」</p>
+                </div>
+                <div class="bible-game-question-hint text-muted small">
+                    這段經文出自哪一卷書？
+                </div>
+            </div>
+
+            <!-- 選項 -->
+            <div class="bible-game-options mt-4">
+                @foreach (var option in currentQuestion.Options)
+                {
+                    var optionClass = GetOptionClass(option);
+                    <button class="bible-game-option @optionClass" 
+                            @onclick="() => SelectAnswer(option)"
+                            disabled="@(selectedAnswer != null)">
+                        @option
+                        @if (selectedAnswer != null && option == currentQuestion.CorrectAnswer)
+                        {
+                            <i class="bi bi-check-circle-fill ms-2"></i>
+                        }
+                        else if (selectedAnswer == option && option != currentQuestion.CorrectAnswer)
+                        {
+                            <i class="bi bi-x-circle-fill ms-2"></i>
+                        }
+                    </button>
+                }
+            </div>
+
+            <!-- 答題後的操作 -->
+            @if (selectedAnswer != null)
+            {
+                <div class="bible-game-feedback mt-4">
+                    @if (selectedAnswer == currentQuestion.CorrectAnswer)
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            答對了！
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-x-circle me-2"></i>
+                            答錯了！正確答案是「@currentQuestion.CorrectAnswer」
+                        </div>
+                    }
+                    <div class="text-muted small mb-3">
+                        出處：@currentQuestion.Verse.BookName @currentQuestion.Verse.ChapterNumber:@currentQuestion.Verse.VerseNumber
+                    </div>
+                    <button class="btn btn-primary" @onclick="NextQuestion">
+                        @if (currentQuestionIndex < questions.Count)
+                        {
+                            <span><i class="bi bi-arrow-right me-1"></i>下一題</span>
+                        }
+                        else
+                        {
+                            <span><i class="bi bi-flag-fill me-1"></i>查看結果</span>
+                        }
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- 遊戲結果 -->
+    @if (gameState == GameState.Result)
+    {
+        <div class="bible-game-result text-center">
+            <div class="bible-game-result-icon mb-4">
+                @if (score >= 8)
+                {
+                    <i class="bi bi-emoji-smile text-success" style="font-size: 5rem;"></i>
+                }
+                else if (score >= 5)
+                {
+                    <i class="bi bi-emoji-neutral text-warning" style="font-size: 5rem;"></i>
+                }
+                else
+                {
+                    <i class="bi bi-emoji-frown text-danger" style="font-size: 5rem;"></i>
+                }
+            </div>
+            <h2 class="mb-3">遊戲結束！</h2>
+            <div class="fs-1 fw-bold mb-4">
+                @score / @questions.Count
+            </div>
+            <p class="text-muted mb-4">
+                @GetResultMessage()
+            </p>
+            @if (isNewHighScore)
+            {
+                <div class="alert alert-success">
+                    <i class="bi bi-trophy-fill me-2"></i>
+                    恭喜！創下新紀錄！
+                </div>
+            }
+            <div class="d-flex gap-3 justify-content-center">
+                <button class="btn btn-outline-primary" @onclick="BackToMenu">
+                    <i class="bi bi-house me-1"></i>返回選單
+                </button>
+                <button class="btn btn-primary" @onclick="StartGame">
+                    <i class="bi bi-arrow-repeat me-1"></i>再玩一次
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private enum GameState { Menu, Playing, Result }
+
+    [Inject]
+    private IBibleGameService? GameService { get; set; }
+
+    private GameState gameState = GameState.Menu;
+    private List<BibleGameQuestion> questions = new();
+    private BibleGameQuestion? currentQuestion;
+    private int currentQuestionIndex = 0;
+    private int score = 0;
+    private string? selectedAnswer;
+    private BibleGameRecordCollection? gameRecords;
+    private BibleWrongAnswerCollection? wrongAnswers;
+    private bool showWrongAnswers = false;
+    private bool isNewHighScore = false;
+    private List<BibleGameAnswer> gameAnswers = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadRecords();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadRecords()
+    {
+        if (GameService != null)
+        {
+            gameRecords = await GameService.GetGameRecordsAsync();
+            wrongAnswers = await GameService.GetWrongAnswersAsync();
+        }
+    }
+
+    private void StartGame()
+    {
+        if (GameService == null) return;
+
+        questions = GameService.StartNewGame(10);
+        currentQuestionIndex = 1;
+        currentQuestion = questions.FirstOrDefault();
+        score = 0;
+        selectedAnswer = null;
+        isNewHighScore = false;
+        gameAnswers.Clear();
+        gameState = GameState.Playing;
+    }
+
+    private void SelectAnswer(string answer)
+    {
+        if (selectedAnswer != null || GameService == null) return;
+
+        selectedAnswer = answer;
+        var isCorrect = GameService.CheckAnswer(currentQuestion!, answer);
+
+        if (isCorrect)
+        {
+            score++;
+        }
+
+        // 記錄答題
+        gameAnswers.Add(new BibleGameAnswer
+        {
+            QuestionNumber = currentQuestion!.QuestionNumber,
+            VerseContent = currentQuestion.Verse.Content,
+            VerseReference = $"{currentQuestion.Verse.BookName} {currentQuestion.Verse.ChapterNumber}:{currentQuestion.Verse.VerseNumber}",
+            CorrectBookName = currentQuestion.CorrectAnswer,
+            SelectedBookName = answer
+        });
+    }
+
+    private async Task NextQuestion()
+    {
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex <= questions.Count)
+        {
+            currentQuestion = questions[currentQuestionIndex - 1];
+            selectedAnswer = null;
+        }
+        else
+        {
+            // 遊戲結束
+            await FinishGame();
+        }
+    }
+
+    private async Task FinishGame()
+    {
+        if (GameService == null) return;
+
+        // 檢查是否破紀錄
+        var oldRecords = await GameService.GetGameRecordsAsync();
+        isNewHighScore = score > oldRecords.HighScore;
+
+        // 儲存遊戲結果
+        var session = new BibleGameSession
+        {
+            Score = score,
+            TotalQuestions = questions.Count,
+            Answers = gameAnswers
+        };
+
+        await GameService.SaveGameResultAsync(session);
+
+        // 更新記錄
+        await LoadRecords();
+
+        gameState = GameState.Result;
+    }
+
+    private void BackToMenu()
+    {
+        gameState = GameState.Menu;
+    }
+
+    private string GetOptionClass(string option)
+    {
+        if (selectedAnswer == null)
+        {
+            return "";
+        }
+
+        if (option == currentQuestion!.CorrectAnswer)
+        {
+            return "correct";
+        }
+
+        if (option == selectedAnswer && option != currentQuestion.CorrectAnswer)
+        {
+            return "incorrect";
+        }
+
+        return "disabled";
+    }
+
+    private string GetResultMessage()
+    {
+        if (score == 10) return "完美！您是聖經專家！";
+        if (score >= 8) return "太棒了！您對聖經非常熟悉！";
+        if (score >= 6) return "做得不錯！繼續努力！";
+        if (score >= 4) return "還可以，多讀聖經會更好！";
+        return "加油！多閱讀聖經可以幫助您認識更多經文。";
+    }
+
+    private void ToggleWrongAnswers()
+    {
+        showWrongAnswers = !showWrongAnswers;
+    }
+
+    private async Task ClearGameRecords()
+    {
+        if (GameService != null)
+        {
+            await GameService.ClearGameRecordsAsync();
+            gameRecords = new BibleGameRecordCollection();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearWrongAnswers()
+    {
+        if (GameService != null)
+        {
+            await GameService.ClearWrongAnswersAsync();
+            wrongAnswers = new BibleWrongAnswerCollection();
+            showWrongAnswers = false;
+            StateHasChanged();
+        }
+    }
+}
+

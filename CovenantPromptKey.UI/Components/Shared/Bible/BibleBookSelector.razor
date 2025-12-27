@@ -1,0 +1,138 @@
+@using CovenantPromptKey.Services.Interfaces
+@using CovenantPromptKey.Models
+
+<div class="bible-book-selector">
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">書卷</label>
+            <select class="form-select form-select-sm" style="width: auto;" value="@selectedBookNumber" @onchange="OnBookSelectChanged">
+                @if (_bookNames != null)
+                {
+                    @foreach (var (name, index) in GetBookOptions())
+                    {
+                        <option value="@index">@name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">章節</label>
+            <select class="form-select form-select-sm" style="width: auto;" value="@selectedChapterNumber" @onchange="OnChapterSelectChanged">
+                @for (int i = 1; i <= ChapterCount; i++)
+                {
+                    <option value="@i">第 @i 章</option>
+                }
+            </select>
+        </div>
+        @if (ShowQuickAccess)
+        {
+            <div class="btn-group flex-nowrap" role="group" aria-label="快捷選擇">
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(1, 1)" title="創世記">創</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(19, 1)" title="詩篇">詩</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(20, 1)" title="箴言">箴</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(23, 1)" title="以賽亞書">賽</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(40, 1)" title="馬太福音">太</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(43, 1)" title="約翰福音">約</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(44, 1)" title="使徒行傳">徒</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(45, 1)" title="羅馬書">羅</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(58, 1)" title="希伯來書">來</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => SelectBook(66, 1)" title="啟示錄">啟</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IBibleReadingService? ReadingService { get; set; }
+
+    [Inject]
+    private IDebugLogService? DebugLogService { get; set; }
+
+    [Parameter]
+    public int BookNumber { get; set; } = 1;
+
+    [Parameter]
+    public int ChapterNumber { get; set; } = 1;
+
+    [Parameter]
+    public bool ShowQuickAccess { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<(int BookNumber, int ChapterNumber)> OnSelectionChanged { get; set; }
+
+    private int selectedBookNumber;
+    private int selectedChapterNumber;
+    private int ChapterCount => ReadingService?.GetChapterCount(selectedBookNumber) ?? 1;
+
+    private List<string>? _bookNames;
+
+    protected override void OnInitialized()
+    {
+        DebugLogService?.Log($"[BibleBookSelector] OnInitialized - BookNumber: {BookNumber}, ChapterNumber: {ChapterNumber}", Models.LogLevel.Info);
+        _bookNames = ReadingService?.GetAllBookNames();
+        selectedBookNumber = BookNumber > 0 ? BookNumber : 1;
+        selectedChapterNumber = ChapterNumber > 0 ? ChapterNumber : 1;
+        DebugLogService?.Log($"[BibleBookSelector] OnInitialized 完成 - selectedBookNumber: {selectedBookNumber}, selectedChapterNumber: {selectedChapterNumber}", Models.LogLevel.Info);
+    }
+
+    protected override void OnParametersSet()
+    {
+        DebugLogService?.Log($"[BibleBookSelector] OnParametersSet - BookNumber: {BookNumber}, ChapterNumber: {ChapterNumber}", Models.LogLevel.Info);
+        DebugLogService?.Log($"[BibleBookSelector] OnParametersSet - 目前 selectedBookNumber: {selectedBookNumber}, selectedChapterNumber: {selectedChapterNumber}", Models.LogLevel.Info);
+        
+        if (BookNumber > 0 && BookNumber != selectedBookNumber)
+        {
+            selectedBookNumber = BookNumber;
+            DebugLogService?.Log($"[BibleBookSelector] 更新 selectedBookNumber 為: {BookNumber}", Models.LogLevel.Info);
+        }
+        if (ChapterNumber > 0 && ChapterNumber != selectedChapterNumber)
+        {
+            selectedChapterNumber = ChapterNumber;
+            DebugLogService?.Log($"[BibleBookSelector] 更新 selectedChapterNumber 為: {ChapterNumber}", Models.LogLevel.Info);
+        }
+    }
+
+    private IEnumerable<(string Name, int Index)> GetBookOptions()
+    {
+        if (_bookNames == null)
+            yield break;
+
+        for (int i = 0; i < _bookNames.Count; i++)
+        {
+            yield return (_bookNames[i], i + 1);
+        }
+    }
+
+    private async Task OnBookSelectChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var bookNumber))
+        {
+            selectedBookNumber = bookNumber;
+            // 書卷變更時，章節重設為 1
+            selectedChapterNumber = 1;
+            await NotifyChange();
+        }
+    }
+
+    private async Task OnChapterSelectChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var chapterNumber))
+        {
+            selectedChapterNumber = chapterNumber;
+            await NotifyChange();
+        }
+    }
+
+    private async Task SelectBook(int bookNumber, int chapterNumber)
+    {
+        selectedBookNumber = bookNumber;
+        selectedChapterNumber = chapterNumber;
+        await NotifyChange();
+    }
+
+    private async Task NotifyChange()
+    {
+        await OnSelectionChanged.InvokeAsync((selectedBookNumber, selectedChapterNumber));
+    }
+}

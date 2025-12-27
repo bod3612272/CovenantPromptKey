@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CovenantPromptKey\CovenantPromptKey.csproj" />
+    <ProjectReference Include="..\CovenantPromptKey.Domain\CovenantPromptKey.Domain.csproj" />
+    <ProjectReference Include="..\CovenantPromptKey.Browser\CovenantPromptKey.Browser.csproj" />
   </ItemGroup>
 
   <ItemGroup>

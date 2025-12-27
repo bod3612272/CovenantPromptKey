@@ -3,6 +3,7 @@ using BibleData.Models;
 using CovenantPromptKey.Models.Bible;
 using CovenantPromptKey.Services.Implementations;
 using CovenantPromptKey.Services.Interfaces;
+using CovenantPromptKey.Services.Interfaces;
 using FluentAssertions;
 using NSubstitute;
 

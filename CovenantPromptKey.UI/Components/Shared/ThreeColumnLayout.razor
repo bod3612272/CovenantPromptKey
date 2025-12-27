@@ -1,0 +1,41 @@
+@* 三欄式佈局容器元件 *@
+@* 元件責任：提供響應式三欄結構，各欄獨立捲動 *@
+
+<div class="three-column-layout @Class">
+    <div class="column source-column">
+        <div class="column-header">
+            <h6>@SourceTitle</h6>
+        </div>
+        <div class="column-content">
+            @SourceContent
+        </div>
+    </div>
+    <div class="column control-column">
+        <div class="column-header">
+            <h6>@ControlTitle</h6>
+        </div>
+        <div class="column-content">
+            @ControlContent
+        </div>
+    </div>
+    <div class="column result-column">
+        <div class="column-header">
+            <h6>@ResultTitle</h6>
+        </div>
+        <div class="column-content">
+            @ResultContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? SourceContent { get; set; }
+    [Parameter] public RenderFragment? ControlContent { get; set; }
+    [Parameter] public RenderFragment? ResultContent { get; set; }
+    
+    [Parameter] public string SourceTitle { get; set; } = "原文 (Source)";
+    [Parameter] public string ControlTitle { get; set; } = "控制面板 (Control)";
+    [Parameter] public string ResultTitle { get; set; } = "結果 (Result)";
+    
+    [Parameter] public string? Class { get; set; }
+}

@@ -1,0 +1,239 @@
+@namespace CovenantPromptKey.Components.Shared
+
+@using CovenantPromptKey.Models
+@using CovenantPromptKey.Models.Results
+@using CovenantPromptKey.Services.Interfaces
+
+@inject ICsvService CsvService
+@inject IDictionaryService DictionaryService
+@inject IJSRuntime JS
+
+<div class="csv-import-export">
+    <h4 class="csv-import-export__title">CSV 匯入/匯出</h4>
+    
+    <div class="csv-import-export__section">
+        <h5 class="csv-import-export__section-title">匯出字典</h5>
+        <p class="csv-import-export__description">
+            將目前的關鍵字字典匯出為 CSV 檔案
+        </p>
+        <button class="csv-import-export__btn csv-import-export__btn--primary"
+                @onclick="HandleExport"
+                disabled="@_isExporting">
+            @if (_isExporting)
+            {
+                <span class="spinner"></span>
+                <span>匯出中...</span>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                <span>匯出 CSV</span>
+            }
+        </button>
+    </div>
+    
+    <div class="csv-import-export__divider"></div>
+    
+    <div class="csv-import-export__section">
+        <h5 class="csv-import-export__section-title">匯入字典</h5>
+        <p class="csv-import-export__description">
+            從 CSV 檔案匯入關鍵字映射 (須包含 SensitiveKey 和 SafeKey 欄位)
+        </p>
+        
+        <div class="csv-import-export__options">
+            <label class="csv-import-export__option">
+                <input type="radio" 
+                       name="importMode" 
+                       value="merge"
+                       checked="@(_importMode == "merge")"
+                       @onchange="@(() => _importMode = "merge")" />
+                <span class="csv-import-export__option-label">合併</span>
+                <span class="csv-import-export__option-hint">保留現有映射，新增不重複的項目</span>
+            </label>
+            <label class="csv-import-export__option">
+                <input type="radio" 
+                       name="importMode" 
+                       value="replace"
+                       checked="@(_importMode == "replace")"
+                       @onchange="@(() => _importMode = "replace")" />
+                <span class="csv-import-export__option-label">覆蓋</span>
+                <span class="csv-import-export__option-hint">清除現有映射，完全使用匯入的資料</span>
+            </label>
+        </div>
+        
+        <div class="csv-import-export__drop-zone @(_isDragging ? "csv-import-export__drop-zone--active" : "")"
+             @ondragenter="HandleDragEnter"
+             @ondragleave="HandleDragLeave"
+             @ondragover:preventDefault
+             @ondrop="HandleDrop"
+             @ondrop:preventDefault>
+            <input type="file" 
+                   accept=".csv"
+                   @ref="_fileInput"
+                   @onchange="HandleFileSelected"
+                   class="csv-import-export__file-input" />
+            <div class="csv-import-export__drop-content">
+                <svg viewBox="0 0 24 24" width="36" height="36">
+                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                <p>拖放 CSV 檔案至此處</p>
+                <p class="csv-import-export__drop-hint">或點擊選擇檔案</p>
+            </div>
+        </div>
+        
+        @if (_isImporting)
+        {
+            <div class="csv-import-export__progress">
+                <div class="spinner"></div>
+                <span>匯入中...</span>
+            </div>
+        }
+        
+        @if (_importResult is not null)
+        {
+            <div class="csv-import-export__result @(_importResult.IsSuccess ? "csv-import-export__result--success" : "csv-import-export__result--error")">
+                <div class="csv-import-export__result-header">
+                    @if (_importResult.IsSuccess)
+                    {
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>匯入成功</span>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                        <span>匯入失敗</span>
+                    }
+                </div>
+                <div class="csv-import-export__result-stats">
+                    <span>成功: @_importResult.ImportedCount</span>
+                    <span>跳過: @_importResult.SkippedCount</span>
+                    <span>錯誤: @_importResult.Errors.Count</span>
+                </div>
+                @if (_importResult.Errors.Count > 0)
+                {
+                    <ul class="csv-import-export__result-errors">
+                        @foreach (var error in _importResult.Errors.Take(5))
+                        {
+                            <li>第 @error.LineNumber 行: @error.Message</li>
+                        }
+                        @if (_importResult.Errors.Count > 5)
+                        {
+                            <li>... 還有 @(_importResult.Errors.Count - 5) 個錯誤</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 匯入完成時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback<CsvImportResult> OnImportComplete { get; set; }
+
+    private ElementReference _fileInput;
+    private bool _isExporting = false;
+    private bool _isImporting = false;
+    private bool _isDragging = false;
+    private string _importMode = "merge";
+    private CsvImportResult? _importResult;
+
+    private async Task HandleExport()
+    {
+        _isExporting = true;
+        try
+        {
+            var mappings = await DictionaryService.GetAllAsync();
+            var csv = CsvService.ExportToCsv(mappings.ToList());
+            
+            // Download file via JS interop
+            var fileName = $"keyword-dictionary-{DateTime.Now:yyyyMMdd-HHmmss}.csv";
+            await JS.InvokeVoidAsync("downloadFile", fileName, csv, "text/csv");
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task HandleFileSelected(ChangeEventArgs e)
+    {
+        // File input is handled via JS interop for reading content
+        await ImportFile();
+    }
+
+    private async Task ImportFile()
+    {
+        _isImporting = true;
+        _importResult = null;
+        
+        try
+        {
+            var content = await JS.InvokeAsync<string>("readFileContent", _fileInput);
+            if (string.IsNullOrEmpty(content))
+            {
+                _importResult = new CsvImportResult
+                {
+                    Success = false,
+                    Errors = [new CsvError { LineNumber = 0, Message = "無法讀取檔案內容" }]
+                };
+                return;
+            }
+
+            _importResult = CsvService.ImportFromCsv(content);
+            
+            if (_importResult.IsSuccess && _importResult.ImportedMappings.Count > 0)
+            {
+                if (_importMode == "replace")
+                {
+                    await DictionaryService.ClearAllAsync();
+                }
+
+                foreach (var mapping in _importResult.ImportedMappings)
+                {
+                    await DictionaryService.AddAsync(mapping);
+                }
+            }
+            
+            await OnImportComplete.InvokeAsync(_importResult);
+        }
+        catch (Exception ex)
+        {
+            _importResult = new CsvImportResult
+            {
+                Success = false,
+                Errors = [new CsvError { LineNumber = 0, Message = $"匯入錯誤: {ex.Message}" }]
+            };
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private void HandleDragEnter()
+    {
+        _isDragging = true;
+    }
+
+    private void HandleDragLeave()
+    {
+        _isDragging = false;
+    }
+
+    private async Task HandleDrop()
+    {
+        _isDragging = false;
+        // Drop handling via JS interop would be needed for reading dropped files
+        // For now, direct users to use the file input
+    }
+}

@@ -1,0 +1,91 @@
+@* 確認對話框元件 *@
+@* 元件責任：顯示替換預覽資訊，提供確認/取消按鈕 *@
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="HandleCancel"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(Message))
+                    {
+                        <p>@Message</p>
+                    }
+                    
+                    @if (ReplacementPreview != null && ReplacementPreview.Count > 0)
+                    {
+                        <div class="replacement-preview">
+                            <h6>替換預覽 (Replacement Preview)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>原文 (Original)</th>
+                                            <th>替換為 (Replace with)</th>
+                                            <th>次數 (Count)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var detail in ReplacementPreview)
+                                        {
+                                            <tr>
+                                                <td><code>@detail.Original</code></td>
+                                                <td><code>@detail.Replacement</code></td>
+                                                <td>@detail.OccurrenceCount</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    @ChildContent
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">
+                        @CancelText
+                    </button>
+                    <button type="button" class="btn btn-primary" @onclick="HandleConfirm">
+                        @ConfirmText
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "確認 (Confirm)";
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public List<CovenantPromptKey.Models.Results.ReplacementDetail>? ReplacementPreview { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string ConfirmText { get; set; } = "確認 (Confirm)";
+    [Parameter] public string CancelText { get; set; } = "取消 (Cancel)";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync();
+        await Close();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+}

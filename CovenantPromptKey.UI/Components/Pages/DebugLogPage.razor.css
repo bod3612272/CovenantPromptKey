@@ -1,0 +1,45 @@
+.debug-log-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+.page-header {
+    flex-shrink: 0;
+}
+
+.page-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.log-container {
+    flex: 1;
+    min-height: 0;
+}
+
+.toast-overlay {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1050;
+}
+
+.toast-overlay .toast {
+    background: var(--bs-success-bg-subtle);
+    border-color: var(--bs-success-border-subtle);
+}
+
+.toast-overlay .toast-body {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}

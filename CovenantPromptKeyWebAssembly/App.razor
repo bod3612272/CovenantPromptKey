@@ -1,0 +1,11 @@
+<Router AppAssembly="typeof(CovenantPromptKey.UI.UiNamespace).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(CovenantPromptKey.Components.Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(CovenantPromptKey.Components.Layout.MainLayout)">
+            <p>Not found.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

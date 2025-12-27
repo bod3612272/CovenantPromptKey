@@ -2,4 +2,8 @@
   <Project Path="CovenantPromptKey.NUnitTests/CovenantPromptKey.NUnitTests.csproj" />
   <Project Path="CovenantPromptKey.Tests/CovenantPromptKey.Tests.csproj" />
   <Project Path="CovenantPromptKey/CovenantPromptKey.csproj" />
+  <Project Path="CovenantPromptKeyWebAssembly/CovenantPromptKeyWebAssembly.csproj" />
+  <Project Path="CovenantPromptKey.Domain/CovenantPromptKey.Domain.csproj" />
+  <Project Path="CovenantPromptKey.Browser/CovenantPromptKey.Browser.csproj" />
+  <Project Path="CovenantPromptKey.UI/CovenantPromptKey.UI.csproj" />
 </Solution>

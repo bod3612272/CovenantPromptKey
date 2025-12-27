@@ -1,0 +1,102 @@
+@* Toast 提示訊息元件 *@
+@* 元件責任：顯示操作結果提示，自動消失，支援不同樣式 *@
+
+@if (IsVisible)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show @GetToastClass()" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="@GetIconClass() me-2"></i>
+                <strong class="me-auto">@Title</strong>
+                <button type="button" class="btn-close" aria-label="Close" @onclick="Hide"></button>
+            </div>
+            <div class="toast-body">
+                @Message
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public string Title { get; set; } = "通知";
+    [Parameter] public ToastType Type { get; set; } = ToastType.Info;
+    [Parameter] public int Duration { get; set; } = 3000;
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    private System.Timers.Timer? _timer;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && Duration > 0)
+        {
+            StartTimer();
+        }
+    }
+
+    private void StartTimer()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+        
+        _timer = new System.Timers.Timer(Duration);
+        _timer.Elapsed += async (s, e) =>
+        {
+            await InvokeAsync(Hide);
+        };
+        _timer.AutoReset = false;
+        _timer.Start();
+    }
+
+    private async Task Hide()
+    {
+        _timer?.Stop();
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+        StateHasChanged();
+    }
+
+    private string GetToastClass() => Type switch
+    {
+        ToastType.Success => "bg-success text-white",
+        ToastType.Warning => "bg-warning",
+        ToastType.Error => "bg-danger text-white",
+        _ => "bg-info text-white"
+    };
+
+    private string GetIconClass() => Type switch
+    {
+        ToastType.Success => "bi bi-check-circle-fill text-white",
+        ToastType.Warning => "bi bi-exclamation-triangle-fill",
+        ToastType.Error => "bi bi-x-circle-fill text-white",
+        _ => "bi bi-info-circle-fill text-white"
+    };
+
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+
+    /// <summary>
+    /// Show a toast message programmatically
+    /// </summary>
+    public void Show(string message, ToastType type = ToastType.Info, string? title = null)
+    {
+        Message = message;
+        Type = type;
+        Title = title ?? GetDefaultTitle(type);
+        IsVisible = true;
+        StateHasChanged();
+        StartTimer();
+    }
+
+    private static string GetDefaultTitle(ToastType type) => type switch
+    {
+        ToastType.Success => "成功",
+        ToastType.Warning => "警告",
+        ToastType.Error => "錯誤",
+        _ => "通知"
+    };
+}

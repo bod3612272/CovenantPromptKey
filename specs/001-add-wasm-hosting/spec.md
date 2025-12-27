@@ -5,6 +5,14 @@
 **Status**: Draft  
 **Input**: User description: "新增可部署至免費 static hosting 的 browser-hosted（client-side）版本，並以資安基線確保安全（避免 XSS/HTML injection、避免將 secrets 置於前端），同時保留現有 Server 版本作為 fallback（dual-hosting）。"
 
+## Cross-links
+
+- Implementation plan: [specs/001-add-wasm-hosting/plan.md](specs/001-add-wasm-hosting/plan.md)
+- Task tracker: [specs/001-add-wasm-hosting/tasks.md](specs/001-add-wasm-hosting/tasks.md)
+- Quickstart (run/publish): [specs/001-add-wasm-hosting/quickstart.md](specs/001-add-wasm-hosting/quickstart.md)
+- Contracts (acceptance requirements): [specs/001-add-wasm-hosting/contracts/](specs/001-add-wasm-hosting/contracts/)
+- Validation evidence: [specs/001-add-wasm-hosting/validation-notes.md](specs/001-add-wasm-hosting/validation-notes.md)
+
 ## Clarifications
 
 ### Session 2025-12-26
