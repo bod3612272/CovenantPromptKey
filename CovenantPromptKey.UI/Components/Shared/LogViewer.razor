@@ -1,0 +1,151 @@
+@* 日誌檢視元件 *@
+@* - 顯示日誌列表 *@
+@* - 顏色區分日誌等級 *@
+@* - 自動滾動至最新 *@
+@* - 提供複製全部按鈕 *@
+
+@using CovenantPromptKey.Models
+
+<div class="log-viewer">
+    <div class="log-viewer__header">
+        <div class="log-viewer__title">
+            <i class="bi bi-journal-text me-2"></i>
+            Debug Log
+            <span class="log-viewer__count">(@(Logs?.Count ?? 0) 筆)</span>
+        </div>
+        <div class="log-viewer__actions">
+            <button class="btn btn-sm btn-outline-secondary" 
+                    @onclick="HandleCopyAll"
+                    disabled="@(Logs == null || Logs.Count == 0)"
+                    title="複製全部日誌">
+                <i class="bi bi-clipboard me-1"></i>
+                複製全部
+            </button>
+            <button class="btn btn-sm btn-outline-danger" 
+                    @onclick="HandleClear"
+                    disabled="@(Logs == null || Logs.Count == 0)"
+                    title="清空日誌">
+                <i class="bi bi-trash me-1"></i>
+                清空
+            </button>
+        </div>
+    </div>
+
+    <div class="log-viewer__content" @ref="_contentRef">
+        @if (Logs == null || Logs.Count == 0)
+        {
+            <div class="log-viewer__empty">
+                <i class="bi bi-inbox"></i>
+                <p>暫無日誌記錄</p>
+            </div>
+        }
+        else
+        {
+            <div class="log-viewer__entries">
+                @foreach (var log in Logs)
+                {
+                    <div class="log-entry log-entry--@log.Level.ToString().ToLowerInvariant()">
+                        <span class="log-entry__time">@log.Timestamp.ToString("HH:mm:ss.fff")</span>
+                        <span class="log-entry__level">@GetLevelBadge(log.Level)</span>
+                        @if (!string.IsNullOrEmpty(log.Source))
+                        {
+                            <span class="log-entry__source">[@log.Source]</span>
+                        }
+                        <span class="log-entry__message">@log.Message</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="log-viewer__footer">
+        <label class="form-check">
+            <input type="checkbox" class="form-check-input" @bind="AutoScroll" />
+            <span class="form-check-label">自動滾動至最新</span>
+        </label>
+        <div class="log-viewer__levels">
+            @foreach (var level in Enum.GetValues<LogLevel>())
+            {
+                <label class="form-check form-check-inline">
+                    <input type="checkbox" 
+                           class="form-check-input" 
+                           checked="@IsLevelVisible(level)"
+                           @onchange="() => ToggleLevel(level)" />
+                    <span class="form-check-label log-level--@level.ToString().ToLowerInvariant()">
+                        @level.ToString()
+                    </span>
+                </label>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 日誌列表
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<LogEntry>? Logs { get; set; }
+
+    /// <summary>
+    /// 複製全部時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCopyAll { get; set; }
+
+    /// <summary>
+    /// 清空時觸發
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    private ElementReference _contentRef;
+    private bool AutoScroll { get; set; } = true;
+    private HashSet<LogLevel> _visibleLevels = [LogLevel.Debug, LogLevel.Info, LogLevel.Warning, LogLevel.Error];
+
+    private IReadOnlyList<LogEntry>? FilteredLogs =>
+        Logs?.Where(l => _visibleLevels.Contains(l.Level)).ToList();
+
+    protected override void OnParametersSet()
+    {
+        // Update the filtered list when Logs changes
+    }
+
+    private bool IsLevelVisible(LogLevel level) => _visibleLevels.Contains(level);
+
+    private void ToggleLevel(LogLevel level)
+    {
+        if (_visibleLevels.Contains(level))
+        {
+            _visibleLevels.Remove(level);
+        }
+        else
+        {
+            _visibleLevels.Add(level);
+        }
+    }
+
+    private async Task HandleCopyAll()
+    {
+        await OnCopyAll.InvokeAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        await OnClear.InvokeAsync();
+    }
+
+    private static MarkupString GetLevelBadge(LogLevel level)
+    {
+        var (badgeClass, icon) = level switch
+        {
+            LogLevel.Debug => ("bg-secondary", "bi-bug"),
+            LogLevel.Info => ("bg-info", "bi-info-circle"),
+            LogLevel.Warning => ("bg-warning text-dark", "bi-exclamation-triangle"),
+            LogLevel.Error => ("bg-danger", "bi-x-circle"),
+            _ => ("bg-secondary", "bi-circle")
+        };
+
+        return new MarkupString($"<span class=\"badge {badgeClass}\"><i class=\"bi {icon}\"></i> {level}</span>");
+    }
+}

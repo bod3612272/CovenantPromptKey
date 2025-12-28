@@ -1,0 +1,230 @@
+@* ResultViewer.razor - 結果顯示組件 *@
+@* Result text display with copy functionality and download option *@
+
+@inject IJSRuntime JS
+
+<div class="result-viewer @(HasResult ? "" : "empty")">
+    <div class="viewer-toolbar">
+        <span class="viewer-label">@Label</span>
+        
+        @if (HasResult)
+        {
+            <div class="toolbar-actions">
+                @if (ShowDownload)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            @onclick="HandleDownload"
+                            title="下載結果">
+                        <i class="bi bi-download"></i>
+                    </button>
+                }
+                
+                <button class="btn btn-sm @(IsCopied ? "btn-success" : "btn-outline-primary")" 
+                        @onclick="HandleCopy"
+                        disabled="@IsCopying"
+                        title="複製到剪貼簿">
+                    @if (IsCopying)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else if (IsCopied)
+                    {
+                        <i class="bi bi-check"></i>
+                        <span>已複製</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-clipboard"></i>
+                        <span>複製</span>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+    
+    <div class="viewer-content">
+        @if (!HasResult)
+        {
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-text"></i>
+                <p>@EmptyMessage</p>
+                @if (!string.IsNullOrEmpty(EmptyHint))
+                {
+                    <small>@EmptyHint</small>
+                }
+            </div>
+        }
+        else if (ShowHighlighting && ReplacementDetails != null && ReplacementDetails.Any())
+        {
+            <pre class="result-text highlighted">@RenderHighlightedResult()</pre>
+        }
+        else
+        {
+            <pre class="result-text">@ResultText</pre>
+        }
+    </div>
+    
+    @if (HasResult && ShowCharacterCount)
+    {
+        <div class="viewer-footer">
+            <span class="character-info">
+                @ResultText?.Length.ToString("N0") 字元
+                @if (OriginalLength > 0)
+                {
+                    var diff = (ResultText?.Length ?? 0) - OriginalLength;
+                    <span class="@(diff >= 0 ? "text-success" : "text-danger")">
+                        (@(diff >= 0 ? "+" : "")@diff.ToString("N0"))
+                    </span>
+                }
+            </span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? ResultText { get; set; }
+    
+    [Parameter]
+    public string Label { get; set; } = "結果";
+    
+    [Parameter]
+    public string EmptyMessage { get; set; } = "尚無結果";
+    
+    [Parameter]
+    public string? EmptyHint { get; set; } = "執行遮罩或還原操作後，結果將顯示於此";
+    
+    [Parameter]
+    public int OriginalLength { get; set; }
+    
+    [Parameter]
+    public bool ShowCharacterCount { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowDownload { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowHighlighting { get; set; } = true;
+    
+    [Parameter]
+    public IEnumerable<ReplacementDetail>? ReplacementDetails { get; set; }
+    
+    [Parameter]
+    public string DownloadFileName { get; set; } = "result.txt";
+    
+    [Parameter]
+    public EventCallback OnCopied { get; set; }
+    
+    [Parameter]
+    public EventCallback OnDownloaded { get; set; }
+    
+    private bool HasResult => !string.IsNullOrEmpty(ResultText);
+    private bool IsCopying { get; set; }
+    private bool IsCopied { get; set; }
+    private System.Timers.Timer? _copyResetTimer;
+    
+    private async Task HandleCopy()
+    {
+        if (string.IsNullOrEmpty(ResultText) || IsCopying) return;
+        
+        try
+        {
+            IsCopying = true;
+            StateHasChanged();
+            
+            await JS.InvokeVoidAsync("interop.copyToClipboard", ResultText);
+            
+            IsCopying = false;
+            IsCopied = true;
+            StateHasChanged();
+            
+            if (OnCopied.HasDelegate)
+            {
+                await OnCopied.InvokeAsync();
+            }
+            
+            // Reset after 2 seconds
+            _copyResetTimer?.Dispose();
+            _copyResetTimer = new System.Timers.Timer(2000);
+            _copyResetTimer.Elapsed += (s, e) =>
+            {
+                IsCopied = false;
+                InvokeAsync(StateHasChanged);
+                _copyResetTimer?.Dispose();
+            };
+            _copyResetTimer.Start();
+        }
+        catch
+        {
+            IsCopying = false;
+            IsCopied = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task HandleDownload()
+    {
+        if (string.IsNullOrEmpty(ResultText)) return;
+        
+        try
+        {
+            await JS.InvokeVoidAsync("interop.downloadFile", DownloadFileName, ResultText);
+            
+            if (OnDownloaded.HasDelegate)
+            {
+                await OnDownloaded.InvokeAsync();
+            }
+        }
+        catch
+        {
+            // Handle download error silently
+        }
+    }
+    
+    private RenderFragment RenderHighlightedResult() => builder =>
+    {
+        if (string.IsNullOrEmpty(ResultText) || ReplacementDetails == null || !ReplacementDetails.Any())
+        {
+            builder.AddContent(0, ResultText);
+            return;
+        }
+        
+        // Build position map of replacements in result text
+        // This is a simplified implementation - in production, we'd track positions more precisely
+        var text = ResultText;
+        var seq = 0;
+        
+        foreach (var detail in ReplacementDetails)
+        {
+            var pos = text.IndexOf(detail.Replacement, StringComparison.Ordinal);
+            if (pos >= 0)
+            {
+                // Add text before replacement
+                if (pos > 0)
+                {
+                    builder.AddContent(seq++, text.Substring(0, pos));
+                }
+                
+                // Add highlighted replacement
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "class", "replacement-highlight");
+                builder.AddAttribute(seq++, "title", $"原文: {detail.Original}");
+                builder.AddContent(seq++, detail.Replacement);
+                builder.CloseElement();
+                
+                text = text.Substring(pos + detail.Replacement.Length);
+            }
+        }
+        
+        // Add remaining text
+        if (!string.IsNullOrEmpty(text))
+        {
+            builder.AddContent(seq++, text);
+        }
+    };
+    
+    public void Dispose()
+    {
+        _copyResetTimer?.Dispose();
+    }
+}

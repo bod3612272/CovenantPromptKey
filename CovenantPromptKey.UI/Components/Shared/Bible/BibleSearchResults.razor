@@ -1,0 +1,132 @@
+@using CovenantPromptKey.Models.Bible
+
+<div class="bible-search-results">
+    @if (IsLoading)
+    {
+        <div class="bible-loading">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">搜尋中...</span>
+            </div>
+            搜尋中...
+        </div>
+    }
+    else if (Results != null && Results.Any())
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">
+                找到 @TotalCount 筆結果
+                @if (TotalCount > Results.Count)
+                {
+                    <span>（顯示前 @Results.Count 筆）</span>
+                }
+            </span>
+        </div>
+
+        @foreach (var result in Results)
+        {
+            <div class="bible-search-result-item" @onclick="() => OnResultClick.InvokeAsync(result)">
+                <div class="bible-search-result-reference">
+                    <i class="bi bi-bookmark me-1"></i>@result.Reference
+                    @if (result.Score > 0)
+                    {
+                        <span class="badge bg-secondary ms-2" title="相關性分數">@result.Score.ToString("F1")</span>
+                    }
+                </div>
+                <div class="bible-search-result-content">
+                    @((MarkupString)result.HighlightedContent)
+                </div>
+            </div>
+        }
+
+        @if (ShowPagination && TotalPages > 1)
+        {
+            <nav aria-label="搜尋結果分頁" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => OnPageChange.InvokeAsync(CurrentPage - 1)" disabled="@(CurrentPage <= 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    
+                    @foreach (var pageNum in GetPageNumbers())
+                    {
+                        <li class="page-item @(pageNum == CurrentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => OnPageChange.InvokeAsync(pageNum)">@pageNum</button>
+                        </li>
+                    }
+                    
+                    <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => OnPageChange.InvokeAsync(CurrentPage + 1)" disabled="@(CurrentPage >= TotalPages)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+    else if (!string.IsNullOrEmpty(SearchKeyword))
+    {
+        <div class="bible-empty-state">
+            <div class="bible-empty-state-icon">
+                <i class="bi bi-search"></i>
+            </div>
+            <p>找不到包含「@SearchKeyword」的經文</p>
+            <p class="text-muted small">請嘗試其他關鍵字</p>
+        </div>
+    }
+    else
+    {
+        <div class="bible-empty-state">
+            <div class="bible-empty-state-icon">
+                <i class="bi bi-search"></i>
+            </div>
+            <p>輸入關鍵字開始搜尋</p>
+            <p class="text-muted small">支援多關鍵字搜尋（以空格分隔）</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<SearchResultItem>? Results { get; set; }
+
+    [Parameter]
+    public string? SearchKeyword { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public int TotalCount { get; set; }
+
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int PageSize { get; set; } = 20;
+
+    [Parameter]
+    public bool ShowPagination { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<SearchResultItem> OnResultClick { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageChange { get; set; }
+
+    private int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        const int maxVisiblePages = 5;
+        var startPage = Math.Max(1, CurrentPage - maxVisiblePages / 2);
+        var endPage = Math.Min(TotalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages)
+        {
+            startPage = Math.Max(1, endPage - maxVisiblePages + 1);
+        }
+
+        return Enumerable.Range(startPage, endPage - startPage + 1);
+    }
+}

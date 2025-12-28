@@ -1,0 +1,150 @@
+/* BibleGamePage specific styles */
+
+/* 遊戲選單 */
+.bible-game-menu {
+    margin-top: 1rem;
+}
+
+.bible-game-card {
+    padding: 2rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background-color: white;
+}
+
+.bible-game-card:hover:not(.disabled) {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.bible-game-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.bible-game-card-icon {
+    font-size: 3rem;
+    color: var(--bs-primary);
+    margin-bottom: 1rem;
+}
+
+/* 遊戲進行中 */
+.bible-game-playing {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.bible-game-progress {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+
+.bible-game-question-card {
+    padding: 2rem;
+    border: 2px solid var(--bs-primary);
+    border-radius: 0.75rem;
+    background-color: white;
+}
+
+.bible-game-question-header {
+    margin-bottom: 1rem;
+}
+
+.bible-game-question-content {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bible-game-question-hint {
+    text-align: center;
+    font-style: italic;
+}
+
+/* 選項 */
+.bible-game-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.bible-game-option {
+    padding: 1rem 1.5rem;
+    border: 2px solid #dee2e6;
+    border-radius: 0.5rem;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.bible-game-option:hover:not(:disabled) {
+    border-color: var(--bs-primary);
+    background-color: #f8f9fa;
+}
+
+.bible-game-option.correct {
+    border-color: #198754;
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.bible-game-option.incorrect {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.bible-game-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 遊戲結果 */
+.bible-game-result {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+/* 錯題記錄 */
+.bible-wrong-answer-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bible-wrong-answer-item {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    background-color: #fff8f8;
+}
+
+.bible-wrong-answer-verse {
+    font-style: italic;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* 響應式調整 */
+@media (max-width: 576px) {
+    .bible-game-options {
+        grid-template-columns: 1fr;
+    }
+
+    .bible-game-question-card {
+        padding: 1.5rem;
+    }
+
+    .bible-game-question-content p {
+        font-size: 1rem !important;
+    }
+}

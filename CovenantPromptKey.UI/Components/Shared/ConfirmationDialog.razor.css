@@ -1,0 +1,14 @@
+.replacement-preview {
+    margin-top: 1rem;
+}
+
+.replacement-preview h6 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.replacement-preview code {
+    padding: 0.2em 0.4em;
+    background: var(--bs-tertiary-bg);
+    border-radius: 0.25rem;
+}

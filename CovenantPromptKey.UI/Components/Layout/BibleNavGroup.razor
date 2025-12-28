@@ -1,0 +1,43 @@
+﻿
+<!-- 聖經功能區塊 -->
+<div class="nav-item px-3 bible-menu-container">
+    <div class="nav-link nav-group-toggle @(isBibleExpanded ? "expanded" : "")" @onclick="ToggleBibleMenu">
+        <span class="bi bi-book" aria-hidden="true"></span> 聖經
+        <span class="bi @(isBibleExpanded ? "bi-chevron-up" : "bi-chevron-down") ms-auto toggle-icon" aria-hidden="true"></span>
+    </div>
+</div>
+@if (isBibleExpanded)
+{
+    <div class="nav-group-items">
+        <div class="nav-item px-3 ps-4">
+            <NavLink class="nav-link" href="bible">
+                <span class="bi bi-house-door" aria-hidden="true"></span> 聖經首頁
+            </NavLink>
+        </div>
+        <div class="nav-item px-3 ps-4">
+            <NavLink class="nav-link" href="bible/search">
+                <span class="bi bi-search" aria-hidden="true"></span> 聖經查詢
+            </NavLink>
+        </div>
+        <div class="nav-item px-3 ps-4">
+            <NavLink class="nav-link" href="bible/read">
+                <span class="bi bi-journal-text" aria-hidden="true"></span> 聖經閱讀
+            </NavLink>
+        </div>
+        <div class="nav-item px-3 ps-4">
+            <NavLink class="nav-link" href="bible/game">
+                <span class="bi bi-controller" aria-hidden="true"></span> 聖經遊戲
+            </NavLink>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isBibleExpanded = false;
+
+    private void ToggleBibleMenu()
+    {
+        isBibleExpanded = !isBibleExpanded;
+    }
+}
+

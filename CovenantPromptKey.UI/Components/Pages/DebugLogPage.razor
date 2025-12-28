@@ -1,0 +1,104 @@
+﻿@page "/debug-log"
+
+@using CovenantPromptKey.Services.Interfaces
+
+@inject IDebugLogService DebugLogService
+@inject IJSRuntime JS
+
+<PageTitle>Debug Log - CovenantPromptKey</PageTitle>
+
+<div class="debug-log-page">
+    <div class="page-header">
+        <h1>
+            <i class="bi bi-bug me-2"></i>
+            Debug Log
+        </h1>
+        <p class="text-muted">追蹤程式執行動作，協助問題排查</p>
+    </div>
+
+    <div class="log-container">
+        <LogViewer Logs="_logs" 
+                   OnCopyAll="HandleCopyAll" 
+                   OnClear="HandleClear" />
+    </div>
+
+    @if (_copySuccess)
+    {
+        <div class="toast-overlay">
+            <div class="toast show" role="alert">
+                <div class="toast-body text-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    已複製到剪貼簿
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<CovenantPromptKey.Models.LogEntry>? _logs;
+    private bool _copySuccess = false;
+
+    protected override void OnInitialized()
+    {
+        RefreshLogs();
+        DebugLogService.OnLogAdded += HandleLogAdded;
+
+        // Log page access
+        DebugLogService.Log("Debug Log 頁面已開啟", Models.LogLevel.Info, "DebugLogPage");
+    }
+
+    private void HandleLogAdded()
+    {
+        InvokeAsync(() =>
+        {
+            RefreshLogs();
+            StateHasChanged();
+        });
+    }
+
+    private void RefreshLogs()
+    {
+        _logs = DebugLogService.GetLogs();
+    }
+
+    private async Task HandleCopyAll()
+    {
+        var formattedLogs = DebugLogService.GetFormattedLogs();
+        
+        if (string.IsNullOrEmpty(formattedLogs))
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("CovenantPromptKey.copyToClipboard", formattedLogs);
+            DebugLogService.Log("日誌已複製到剪貼簿", Models.LogLevel.Info, "DebugLogPage");
+
+            _copySuccess = true;
+            StateHasChanged();
+
+            await Task.Delay(2000);
+            _copySuccess = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            DebugLogService.Log($"複製失敗: {ex.Message}", Models.LogLevel.Error, "DebugLogPage");
+        }
+    }
+
+    private void HandleClear()
+    {
+        DebugLogService.Clear();
+        RefreshLogs();
+        DebugLogService.Log("日誌已清空", Models.LogLevel.Info, "DebugLogPage");
+    }
+
+    public void Dispose()
+    {
+        DebugLogService.OnLogAdded -= HandleLogAdded;
+    }
+}
+

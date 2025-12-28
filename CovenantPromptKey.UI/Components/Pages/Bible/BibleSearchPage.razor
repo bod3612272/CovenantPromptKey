@@ -1,0 +1,267 @@
+﻿@page "/bible/search"
+@implements IDisposable
+
+<PageTitle>聖經查詢 - CovenantPromptKey</PageTitle>
+
+<link href="css/bible.css" rel="stylesheet" />
+
+<div class="bible-container">
+    <div class="bible-page-header">
+        <h1 class="bible-page-title">
+            <i class="bi bi-search me-2"></i>聖經查詢
+        </h1>
+    </div>
+
+    <BibleSubNavigation />
+
+    <!-- 搜尋輸入區 -->
+    <div class="mb-4">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" 
+                   class="form-control" 
+                   placeholder="輸入關鍵字搜尋經文（多關鍵字以空格分隔）"
+                   @bind="searchKeyword"
+                   @bind:event="oninput"
+                   @bind:after="OnSearchInputChanged"
+                   @onkeydown="OnKeyDown" />
+            @if (!string.IsNullOrEmpty(searchKeyword))
+            {
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            }
+        </div>
+        <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>
+            支援多關鍵字搜尋，以空格分隔。例如：「神 愛」會搜尋同時包含「神」和「愛」的經文。
+        </div>
+    </div>
+
+    <!-- 設定面板（可摺疊） -->
+    <div class="mb-4">
+        <button class="btn btn-sm btn-outline-secondary" type="button" @onclick="ToggleSettings">
+            <i class="bi @(showSettings ? "bi-chevron-up" : "bi-chevron-down") me-1"></i>
+            顯示設定
+        </button>
+        @if (showSettings)
+        {
+            <div class="mt-2">
+                <BibleSettingsPanel Settings="@settings" SettingsChanged="OnSettingsChanged" ShowResetButton="true" />
+            </div>
+        }
+    </div>
+
+    <!-- 搜尋結果 -->
+    <BibleSearchResults 
+        Results="@displayResults"
+        SearchKeyword="@searchKeyword"
+        IsLoading="@isLoading"
+        TotalCount="@totalResults"
+        CurrentPage="@currentPage"
+        PageSize="@pageSize"
+        ShowPagination="true"
+        OnResultClick="OnResultClicked"
+        OnPageChange="OnPageChanged" />
+</div>
+
+@code {
+    [Inject]
+    private IBibleSearchService? SearchService { get; set; }
+
+    [Inject]
+    private IBibleSettingsService? SettingsService { get; set; }
+
+    [Inject]
+    private IBiblePageStateService? PageStateService { get; set; }
+
+    [Inject]
+    private IBibleReadingService? ReadingService { get; set; }
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    private string searchKeyword = "";
+    private List<SearchResultItem> allResults = new();
+    private List<SearchResultItem> displayResults = new();
+    private bool isLoading = false;
+    private bool showSettings = false;
+    private BibleSettings settings = new();
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalResults = 0;
+
+    private CancellationTokenSource? _searchCts;
+    private System.Timers.Timer? _debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 初始化防抖動計時器
+        _debounceTimer = new System.Timers.Timer(250);
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Elapsed += async (s, e) => await InvokeAsync(ExecuteSearch);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 載入設定
+            if (SettingsService != null)
+            {
+                settings = await SettingsService.LoadSettingsAsync();
+            }
+
+            // 載入頁面狀態
+            if (PageStateService != null)
+            {
+                var state = await PageStateService.LoadSearchPageStateAsync();
+                searchKeyword = state.Keyword;
+                currentPage = state.CurrentPage;
+                pageSize = state.PageSize;
+
+                if (!string.IsNullOrEmpty(searchKeyword))
+                {
+                    await ExecuteSearch();
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchInputChanged()
+    {
+        // 重置防抖動計時器
+        _debounceTimer?.Stop();
+        _debounceTimer?.Start();
+
+        // 儲存狀態
+        await SavePageState();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            _debounceTimer?.Stop();
+            await ExecuteSearch();
+        }
+    }
+
+    private async Task ExecuteSearch()
+    {
+        // 取消之前的搜尋
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+
+        if (string.IsNullOrWhiteSpace(searchKeyword))
+        {
+            allResults.Clear();
+            displayResults.Clear();
+            totalResults = 0;
+            currentPage = 1;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            if (SearchService != null)
+            {
+                // 搜尋所有結果（最多 500 筆）
+                allResults = SearchService.SearchFromInput(searchKeyword, 500);
+                totalResults = allResults.Count;
+                currentPage = 1;
+                UpdateDisplayResults();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 搜尋被取消，忽略
+        }
+        catch (Exception)
+        {
+            allResults.Clear();
+            displayResults.Clear();
+            totalResults = 0;
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void UpdateDisplayResults()
+    {
+        var skip = (currentPage - 1) * pageSize;
+        displayResults = allResults.Skip(skip).Take(pageSize).ToList();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        currentPage = page;
+        UpdateDisplayResults();
+        await SavePageState();
+    }
+
+    private async Task OnResultClicked(SearchResultItem result)
+    {
+        // 導航到閱讀頁面
+        // 使用 ReadingService 取得書卷編號
+        var bookNumber = ReadingService?.GetBookNumber(result.BookName) ?? 1;
+        if (bookNumber < 1) bookNumber = 1;
+        
+        NavigationManager?.NavigateTo($"/bible/read/{bookNumber}/{result.ChapterNumber}?verse={result.VerseNumber}");
+    }
+
+    private async Task ClearSearch()
+    {
+        searchKeyword = "";
+        allResults.Clear();
+        displayResults.Clear();
+        totalResults = 0;
+        currentPage = 1;
+        await SavePageState();
+    }
+
+    private void ToggleSettings()
+    {
+        showSettings = !showSettings;
+    }
+
+    private async Task OnSettingsChanged(BibleSettings newSettings)
+    {
+        settings = newSettings;
+        if (SettingsService != null)
+        {
+            await SettingsService.SaveSettingsAsync(settings);
+        }
+    }
+
+    private async Task SavePageState()
+    {
+        if (PageStateService != null)
+        {
+            await PageStateService.SaveSearchPageStateAsync(new BibleSearchPageState
+            {
+                Keyword = searchKeyword,
+                CurrentPage = currentPage,
+                PageSize = pageSize
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+        _searchCts?.Dispose();
+    }
+}
+

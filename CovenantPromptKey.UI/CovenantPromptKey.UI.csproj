@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CovenantPromptKey</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CovenantPromptKey.Domain\CovenantPromptKey.Domain.csproj" />
+    <ProjectReference Include="..\CovenantPromptKey.Browser\CovenantPromptKey.Browser.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BibleData">
+      <HintPath>..\Dll\BibleData.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

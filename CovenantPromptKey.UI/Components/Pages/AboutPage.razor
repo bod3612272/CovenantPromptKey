@@ -1,0 +1,257 @@
+﻿@page "/about"
+
+<PageTitle>關於 - CovenantPromptKey</PageTitle>
+
+<div class="about-page">
+    <div class="about-header">
+        <div class="app-logo">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h1>CovenantPromptKey</h1>
+        <p class="version">版本 1.0.0</p>
+        <p class="tagline">WebAssembly-first（browser-hosted）| 互動式關鍵字替換介面 | 聖經查詢系統</p>
+    </div>
+
+    <div class="about-sections">
+        <!-- Description -->
+        <section class="about-section">
+            <h2><i class="bi bi-info-circle me-2"></i>應用程式說明</h2>
+            <div class="section-content">
+                <p>
+                    CovenantPromptKey 是一款專為保護敏感資訊而設計的工具，讓您在使用 AI 服務時能夠安全地遮罩機密內容。
+                </p>
+                <p>
+                    透過直覺的關鍵字映射系統，您可以將公司名稱、產品代號、個人資訊等敏感內容替換為安全的替代詞，
+                    待 AI 回覆後再將替代詞還原為原始內容。
+                </p>
+                <p class="mb-0">
+                    本專案採用 <strong>dual-hosting</strong>：目前以 <strong>browser-hosted（Blazor WebAssembly）</strong> 作為主要發展與上線版本（例如 GitHub Pages 的 static hosting），
+                    同時保留既有 <strong>Blazor Server</strong> 作為 legacy fallback。現階段兩者在使用者可見功能與行為上維持 <strong>feature parity</strong>。
+                </p>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="about-section">
+            <h2><i class="bi bi-star me-2"></i>核心功能</h2>
+            <div class="section-content">
+                <ul class="feature-list">
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>使用高效 Aho-Corasick 演算法進行多模式字串匹配</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>支援繁體中文與英文混合文字處理</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>即時視覺化標示偵測到的關鍵字</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>智慧偵測關鍵字語境警示</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>CSV 格式匯入/匯出字典</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>完整的操作日誌追蹤</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>offline-first（WASM）：成功載入一次後可離線啟動（PWA/service worker）</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>Security baseline：CSP（禁止 inline script）+ code-as-text 安全呈現</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Technology Stack -->
+        <section class="about-section">
+            <h2><i class="bi bi-code-slash me-2"></i>技術架構</h2>
+            <div class="section-content">
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <span class="tech-name">.NET 10.0</span>
+                        <span class="tech-desc">應用程式框架</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Blazor WebAssembly</span>
+                        <span class="tech-desc">Primary（browser-hosted）</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Blazor Server</span>
+                        <span class="tech-desc">Legacy fallback</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">Bootstrap 5</span>
+                        <span class="tech-desc">UI 元件庫</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">CsvHelper</span>
+                        <span class="tech-desc">CSV 處理</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">PWA</span>
+                        <span class="tech-desc">offline-first 快取機制</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privacy -->
+        <section class="about-section">
+            <h2><i class="bi bi-shield-check me-2"></i>隱私聲明</h2>
+            <div class="section-content">
+                <div class="alert alert-success">
+                    <i class="bi bi-lock-fill me-2"></i>
+                    <div>
+                        <strong>您的資料安全</strong>
+                        <p class="mb-0 mt-1">
+                            所有關鍵字字典資料僅儲存在您的瀏覽器本機（localStorage），
+                            工作階段資料儲存在 sessionStorage。
+                            沒有任何資料會被傳送至外部伺服器，且 browser-hosted 版本遵循 <strong>no secrets in client</strong> 原則（靜態輸出不包含任何金鑰或憑證）。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Baseline -->
+        <section class="about-section">
+            <h2><i class="bi bi-shield-lock me-2"></i>資安措施（Security Baseline）</h2>
+            <div class="section-content">
+                <p>
+                    CovenantPromptKey 的設計目標是把使用者輸入視為 <strong>untrusted input</strong>，並以最低可行的安全基線降低 XSS / HTML injection 風險。
+                    您可以貼上任何程式碼或包含特殊字元的內容（例如 <code>&lt;script&gt;</code>、<code>&lt;img onerror=...&gt;</code>），系統必須只把它當成文字顯示，不會執行。
+                </p>
+
+                <ul class="mb-3">
+                    <li><strong>CSP</strong>：設定 Content Security Policy，<strong>禁止 inline script</strong>，並限制腳本來源為同源（必要時允許 WASM runtime 所需的 <code>'wasm-unsafe-eval'</code>）。</li>
+                    <li><strong>Code-as-text</strong>：所有由使用者輸入/匯入/儲存資料衍生的內容，預設以純文字方式渲染（escaping/encoding），避免 DOM 注入。</li>
+                    <li><strong>No secrets in client</strong>：browser-hosted 靜態輸出不應包含任何敏感憑證/金鑰；部署前可進行 artefact scan（secrets pattern scan）。</li>
+                </ul>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong>重要提醒（Residual Risk）</strong>
+                        <p class="mb-0 mt-1">
+                            由於字典資料會保存在瀏覽器端儲存（localStorage/sessionStorage），若您的瀏覽器環境已被惡意擴充套件、惡意腳本或系統惡意程式控制，仍可能導致資料外洩。
+                            建議在可信任的裝置與瀏覽器環境使用，並避免在共享電腦上保存敏感字典。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Storage -->
+        <section class="about-section">
+            <h2><i class="bi bi-hdd me-2"></i>資料儲存說明</h2>
+            <div class="section-content">
+                <p>
+                    本應用程式採用瀏覽器內建的 <strong>Web Storage API</strong> 來儲存您的字典資料：
+                </p>
+                
+                <div class="storage-info mt-3">
+                    <div class="storage-type mb-3">
+                        <h5><i class="bi bi-database me-2 text-primary"></i>localStorage</h5>
+                        <p class="text-muted mb-2">
+                            用於永久儲存關鍵字字典。資料會保留在瀏覽器中，即使關閉視窗或重新啟動電腦也不會遺失。
+                        </p>
+                        <ul class="small">
+                            <li>儲存位置：您的瀏覽器本機</li>
+                            <li>儲存上限：通常為 5-10 MB</li>
+                            <li>資料格式：JSON 結構化資料</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="storage-type mb-3">
+                        <h5><i class="bi bi-clock-history me-2 text-info"></i>sessionStorage</h5>
+                        <p class="text-muted mb-2">
+                            用於暫存工作階段資料（如目前的編輯內容）。關閉瀏覽器分頁後會自動清除。
+                        </p>
+                    </div>
+                </div>
+
+                <p class="text-muted small mb-0">
+                    Tip: 若您希望 offline-first 在離線時仍可啟動，請先完成一次成功的線上載入，讓瀏覽器建立必要的快取（PWA/service worker 的 app shell）。
+                </p>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong>清除瀏覽器資料的方法</strong>
+                        <p class="mb-2 mt-1">若您需要清除本應用程式儲存的資料，可使用以下方式：</p>
+                        <ol class="mb-0 small">
+                            <li>
+                                <strong>透過瀏覽器設定</strong>：前往瀏覽器的「設定」→「隱私權與安全性」→「清除瀏覽資料」，
+                                勾選「Cookie 和其他網站資料」或「網站資料」後清除。
+                            </li>
+                            <li>
+                                <strong>透過開發者工具</strong>：按 <kbd>F12</kbd> 開啟開發者工具，
+                                前往「Application」（應用程式）分頁 →「Storage」→「Local Storage」，
+                                右鍵點選本網站網址後選擇「Clear」。
+                            </li>
+                            <li>
+                                <strong>透過字典管理頁面</strong>：在「字典管理」頁面中刪除所有關鍵字映射，
+                                或使用清除功能（若有提供）。
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Credits -->
+        <section class="about-section">
+            <h2><i class="bi bi-people me-2"></i>致謝</h2>
+            <div class="section-content">
+                <p>本專案使用了以下開源專案：</p>
+                <ul class="credit-list">
+                    <li>
+                        <a href="https://github.com/JoshClose/CsvHelper" target="_blank" rel="noopener">
+                            CsvHelper
+                        </a>
+                        <span class="license">- Apache-2.0 License</span>
+                    </li>
+                    <li>
+                        <a href="https://github.com/xoofx/markdig" target="_blank" rel="noopener">
+                            Markdig
+                        </a>
+                        <span class="license">- BSD 2-Clause License</span>
+                    </li>
+                    <li>
+                        <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">
+                            Bootstrap Icons
+                        </a>
+                        <span class="license">- MIT License</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- License -->
+        <section class="about-section">
+            <h2><i class="bi bi-file-earmark-text me-2"></i>授權條款</h2>
+            <div class="section-content">
+                <p>
+                    CovenantPromptKey 採用 MIT License 授權。
+                </p>
+                <p class="text-muted small">
+                    © 2025 CovenantPromptKey. All rights reserved.
+                </p>
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+}
+

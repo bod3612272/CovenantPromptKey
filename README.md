@@ -7,7 +7,7 @@
   **互動式關鍵字替換介面 | 聖經查詢系統**
   
   [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-  [![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor)](https://blazor.net/)
+  [![Blazor](https://img.shields.io/badge/Blazor-Dual--hosting%20(WASM%20%2B%20Server)-512BD4?logo=blazor)](https://blazor.net/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
   [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://www.microsoft.com/windows)
 
@@ -17,9 +17,14 @@
 
 ## 📖 Overview
 
-**CovenantPromptKey** 是一款專為保護敏感資訊而設計的桌面網頁應用程式，讓您在使用 AI 服務時能夠安全地遮罩機密內容。透過直覺的關鍵字映射系統，您可以將公司名稱、產品代號、個人資訊等敏感內容替換為安全的替代詞，待 AI 回覆後再將替代詞還原為原始內容。
+**CovenantPromptKey** 是一款專為保護敏感資訊而設計的 Web 應用，讓您在使用 AI 服務時能夠安全地遮罩機密內容。透過直覺的關鍵字映射系統，您可以將公司名稱、產品代號、個人資訊等敏感內容替換為安全的替代詞，待 AI 回覆後再將替代詞還原為原始內容。
 
 此外，本應用程式亦整合了**聖經查詢系統**，提供聖經經文搜尋、閱讀及互動遊戲功能。
+
+ ### Hosting Model（WebAssembly-first, Dual-hosting）
+
+ - **Primary（browser-hosted / Blazor WebAssembly）**：可部署為純靜態資產（GitHub Pages / Azure Static Web Apps），並支援 **offline-first**（成功載入一次後可離線啟動）。
+ - **Legacy fallback（Blazor Server）**：保留既有 Server host 以利相容/回退；現階段兩個版本維持 **feature parity**，但未來主要發展方向以 Web（WASM）版本為主。
 
 ---
 
@@ -56,7 +61,7 @@
 | 技術 | 版本/說明 |
 |------|----------|
 | **Framework** | .NET 10.0 (Preview) |
-| **UI Framework** | Blazor Server (Interactive Server Components) |
+| **UI Framework** | Blazor WebAssembly（Primary） + Blazor Server（Legacy fallback） |
 | **CSS Framework** | Bootstrap 5 |
 | **CSV Processing** | CsvHelper 33.1.0 |
 | **Markdown Parsing** | Markdig 0.44.0 |
@@ -83,14 +88,42 @@ cd CovenantPromptKey
 # Restore dependencies
 dotnet restore
 
-# Run the application
-cd CovenantPromptKey
-dotnet run
+# Run WebAssembly host (primary, browser-hosted)
+dotnet run --project CovenantPromptKeyWebAssembly/CovenantPromptKeyWebAssembly.csproj
+
+# Run Server host (legacy fallback)
+dotnet run --project CovenantPromptKey/CovenantPromptKey.csproj
 ```
 
-應用程式啟動後會自動開啟預設瀏覽器。
+Server host 啟動後會自動開啟預設瀏覽器（現況 `Program.cs`）。WebAssembly host 會以開發伺服器提供靜態資產。
 
-### Publish Single File Executable
+### Publish（Browser-hosted, Static Hosting）
+
+本 repo 提供可重複、可驗證（deterministic hashes）的 publish script，用於產出可直接部署到 static hosting 的 artefacts：
+
+- Script: `specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1`
+- Output root: `ReleaseDownload/browser-hosted/{platform}/{configuration}/wwwroot/`
+
+#### Publish: GitHub Pages
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release
+```
+
+Notes:
+- `BasePath` 必須是 `/<repo>/` 形式（以 `/` 開頭與結尾），以支援子路徑託管與 deep link refresh。
+- GitHub Pages 需要 `.nojekyll` 與 `404.html` 才能確保 `/_framework/*` 正常服務並避免重新整理時 404。
+
+#### Publish: Azure Static Web Apps
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release
+```
+
+Notes:
+- 會使用 `CovenantPromptKeyWebAssembly/staticwebapp.config.json` 啟用 `navigationFallback`，同時保護 `/_framework/*` 與 `/_content/*` 不被 rewrite 成 HTML。
+
+### Publish Single File Executable（Server fallback）
 
 ```bash
 # Build release version (single file executable)
@@ -124,6 +157,7 @@ dotnet publish -c Release
 
 ```
 CovenantPromptKey/
+├── CovenantPromptKeyWebAssembly/# WebAssembly Host (Primary, browser-hosted)
 ├── CovenantPromptKey/           # Main Application
 │   ├── Components/              # Blazor UI Components
 │   │   ├── Layout/              # Layout Components
@@ -150,7 +184,18 @@ CovenantPromptKey/
 - **本機資料儲存**：所有關鍵字字典資料僅儲存在您的瀏覽器本機（localStorage）
 - **零外部傳輸**：沒有任何資料會被傳送至外部伺服器
 - **工作階段隔離**：工作階段資料儲存於 sessionStorage，關閉瀏覽器即清除
-- **完全離線運作**：應用程式可完全離線運作，無需網路連線
+- **offline-first（WASM）**：完成一次成功載入後，透過 PWA/service worker 快取 app shell，可在離線狀態啟動並執行核心流程
+
+### Security Baseline（XSS / HTML Injection Mitigation）
+
+- **CSP**：設定 Content Security Policy，禁止 inline script；WASM runtime 以最低必要的 `script-src 'self' 'wasm-unsafe-eval'` 運作。
+- **Code-as-text**：任何使用者貼上/匯入/回顯內容一律以純文字安全呈現（escaping/encoding），不可被瀏覽器當成 HTML/JS 執行。
+- **No secrets in client**：browser-hosted 輸出不得包含任何敏感憑證/金鑰。
+
+Validation（可重複驗證）
+- Malicious input corpus: `specs/001-add-wasm-hosting/security/malicious-input-cases.md`
+- Static artefact secrets scan:
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
 
 ---
 
@@ -223,3 +268,10 @@ dotnet test --collect:"XPlat Code Coverage"
 <div align="center">
   <sub>Built with ❤️ using .NET and Blazor</sub>
 </div>
+
+---
+
+## 🗺️ Specs
+
+- Dual-hosting + browser-hosted + security baseline: `specs/001-add-wasm-hosting/spec.md`
+- Interactive keyword replacement interface: `specs/001-interactive-keyword-replace/spec.md`

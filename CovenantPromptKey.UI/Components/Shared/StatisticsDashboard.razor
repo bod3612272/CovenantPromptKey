@@ -1,0 +1,144 @@
+@* StatisticsDashboard.razor - 即時統計儀表板組件 *@
+@* Real-time statistics display with keyword counts and processing status *@
+
+<div class="statistics-dashboard">
+    <div class="stats-header">
+        <h6 class="stats-title">
+            <i class="bi bi-graph-up"></i> 處理統計
+        </h6>
+    </div>
+    
+    <ul class="stats-list">
+        <li class="stat-item">
+            <i class="bi bi-file-text text-primary"></i>
+            <span class="stat-label">原文字元</span>
+            <span class="stat-value">@FormatNumber(SourceLength)</span>
+        </li>
+        
+        <li class="stat-item">
+            <i class="bi bi-key text-info"></i>
+            <span class="stat-label">不同關鍵字</span>
+            <span class="stat-value">@FormatNumber(UniqueKeywordCount)</span>
+        </li>
+        
+        <li class="stat-item">
+            <i class="bi bi-hash text-warning"></i>
+            <span class="stat-label">總出現次數</span>
+            <span class="stat-value">@FormatNumber(TotalOccurrences)</span>
+        </li>
+        
+        <li class="stat-item">
+            <i class="bi bi-check-circle text-success"></i>
+            <span class="stat-label">已選擇</span>
+            <span class="stat-value">@FormatNumber(SelectedCount)</span>
+        </li>
+    </ul>
+    
+    @if (ShowProgressBar && TotalOccurrences > 0)
+    {
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>替換比例</span>
+                <span>@SelectedPercentage%</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-success" 
+                     role="progressbar" 
+                     style="width: @SelectedPercentage%"
+                     aria-valuenow="@SelectedPercentage" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (ShowResultStats && ResultLength > 0)
+    {
+        <div class="result-stats">
+            <div class="result-stat">
+                <i class="bi bi-file-earmark-text text-secondary"></i>
+                <span class="result-stat-label">結果字元:</span>
+                <span class="result-stat-value">@FormatNumber(ResultLength)</span>
+            </div>
+            <div class="result-stat">
+                <i class="bi bi-arrow-left-right text-secondary"></i>
+                <span class="result-stat-label">變化:</span>
+                <span class="result-stat-value @(CharacterDiff >= 0 ? "text-success" : "text-danger")">
+                    @(CharacterDiff >= 0 ? "+" : "")@FormatNumber(CharacterDiff)
+                </span>
+            </div>
+            <div class="result-stat">
+                <i class="bi bi-repeat text-secondary"></i>
+                <span class="result-stat-label">替換次數:</span>
+                <span class="result-stat-value">@FormatNumber(ReplacementCount)</span>
+            </div>
+        </div>
+    }
+    
+    @if (ShowProcessingTime && ProcessingTimeMs > 0)
+    {
+        <div class="processing-time">
+            <i class="bi bi-stopwatch"></i>
+            <span>處理時間: @FormatProcessingTime(ProcessingTimeMs)</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int SourceLength { get; set; }
+    
+    [Parameter]
+    public int UniqueKeywordCount { get; set; }
+    
+    [Parameter]
+    public int TotalOccurrences { get; set; }
+    
+    [Parameter]
+    public int SelectedCount { get; set; }
+    
+    [Parameter]
+    public int ResultLength { get; set; }
+    
+    [Parameter]
+    public int ReplacementCount { get; set; }
+    
+    [Parameter]
+    public double ProcessingTimeMs { get; set; }
+    
+    [Parameter]
+    public bool ShowProgressBar { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowResultStats { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowProcessingTime { get; set; } = true;
+    
+    private int SelectedPercentage => TotalOccurrences > 0 
+        ? (int)Math.Round((double)SelectedCount / TotalOccurrences * 100) 
+        : 0;
+    
+    private int CharacterDiff => ResultLength - SourceLength;
+    
+    private static string FormatNumber(int number)
+    {
+        return number switch
+        {
+            >= 1_000_000 => $"{number / 1_000_000.0:F1}M",
+            >= 1_000 => $"{number / 1_000.0:F1}K",
+            _ => number.ToString("N0")
+        };
+    }
+    
+    private static string FormatProcessingTime(double ms)
+    {
+        return ms switch
+        {
+            >= 1000 => $"{ms / 1000:F2} 秒",
+            >= 1 => $"{ms:F0} 毫秒",
+            _ => $"{ms:F2} 毫秒"
+        };
+    }
+}
