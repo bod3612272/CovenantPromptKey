@@ -25,8 +25,8 @@ jobs:
       - name: Publish (Azure SWA)
         shell: pwsh
         run: |
-          ./specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 \
-            -Platform azure-swa \
+          ./scripts/publish-browser-hosted.ps1 `
+            -Platform azure-swa `
             -Configuration Release
 
       - name: Deploy to Azure Static Web Apps

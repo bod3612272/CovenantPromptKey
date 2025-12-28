@@ -27,13 +27,13 @@
 
 本 repo 提供一個可重複、可驗證（輸出 hashes）的 publish script：
 
-- Script: `specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1`
+- Script: `scripts/publish-browser-hosted.ps1`
 - Output root: `ReleaseDownload/browser-hosted/{platform}/{configuration}/wwwroot/`
 
 ### Publish: GitHub Pages
 
 - Command:
-	- `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
+	- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
 - Notes:
 	- `BasePath` 必須是 `/<repo>/` 形式（需以 `/` 開頭與結尾）。
 	- Script 會在 publish output 內改寫 `index.html` 與 `404.html` 的 `<base href="..." />`。
@@ -42,7 +42,7 @@
 ### Publish: Azure Static Web Apps
 
 - Command:
-	- `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release`
+	- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release`
 - Notes:
 	- Script 會把 `CovenantPromptKeyWebAssembly/staticwebapp.config.json` 複製到 publish output root。
 	- `navigationFallback` 的 `exclude` 規則必須保護 `/_framework/*` 與 `/_content/*`，避免載入 .wasm/.dll 時拿到 HTML。
@@ -82,10 +82,10 @@
 
 此掃描用來確保「client-side 靜態檔案」中不包含常見 secrets/token patterns。
 
-- Script: `specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1`
+- Script: `scripts/scan-static-artifacts.ps1`
 - Example（先產出 publish output，再掃描）：
-	- `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
-	- `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
+	- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
+	- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
 
 PASS/FAIL：
 - PASS：腳本回傳 0 並顯示 `PASS: No secret patterns detected.`

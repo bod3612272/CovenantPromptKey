@@ -101,13 +101,13 @@ Server host 啟動後會自動開啟預設瀏覽器（現況 `Program.cs`）。W
 
 本 repo 提供可重複、可驗證（deterministic hashes）的 publish script，用於產出可直接部署到 static hosting 的 artefacts：
 
-- Script: `specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1`
+- Script: `scripts/publish-browser-hosted.ps1`
 - Output root: `ReleaseDownload/browser-hosted/{platform}/{configuration}/wwwroot/`
 
 #### Publish: GitHub Pages
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release
 ```
 
 Notes:
@@ -117,7 +117,7 @@ Notes:
 #### Publish: Azure Static Web Apps
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release
 ```
 
 Notes:
@@ -195,7 +195,7 @@ CovenantPromptKey/
 Validation（可重複驗證）
 - Malicious input corpus: `specs/001-add-wasm-hosting/security/malicious-input-cases.md`
 - Static artefact secrets scan:
-  - `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
 
 ---
 

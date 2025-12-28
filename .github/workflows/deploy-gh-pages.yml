@@ -31,9 +31,9 @@ jobs:
       - name: Publish (GitHub Pages)
         shell: pwsh
         run: |
-          ./specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 \
-            -Platform github-pages \
-            -BasePath "/${{ github.event.repository.name }}/" \
+          ./scripts/publish-browser-hosted.ps1 `
+            -Platform github-pages `
+            -BasePath "/${{ github.event.repository.name }}/" `
             -Configuration Release
 
       - name: Upload Pages artifact

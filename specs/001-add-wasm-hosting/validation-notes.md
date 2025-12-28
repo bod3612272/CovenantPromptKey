@@ -13,7 +13,7 @@
 ### GitHub Pages
 
 - Command:
-  - `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform github-pages -BasePath "/CovenantPromptKey/" -Configuration Release`
 - Output:
   - `ReleaseDownload/browser-hosted/github-pages/Release/wwwroot/`
 - Base path:
@@ -26,7 +26,7 @@
 ### Azure Static Web Apps (SWA)
 
 - Command:
-  - `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release`
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-browser-hosted.ps1 -Platform azure-swa -Configuration Release`
 - Output:
   - `ReleaseDownload/browser-hosted/azure-swa/Release/wwwroot/`
 - Config:
@@ -45,10 +45,10 @@
 ### Static artefact secrets scan
 
 - GitHub Pages output:
-  - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
+  - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/github-pages/Release/wwwroot"`
   - Result: PASS
 - Azure SWA output:
-  - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/azure-swa/Release/wwwroot"`
+  - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scan-static-artifacts.ps1 -PublishRoot "ReleaseDownload/browser-hosted/azure-swa/Release/wwwroot"`
   - Result: PASS
 
 ## Notes (Operational)

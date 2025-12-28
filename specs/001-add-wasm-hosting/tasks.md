@@ -25,8 +25,8 @@ description: "Task list for 001-add-wasm-hosting implementation (Option A: incre
 - [x] T001 Create approval log in specs/001-add-wasm-hosting/approvals.md
 - [x] T002 [P] Create parity suite schema + testcases doc in specs/001-add-wasm-hosting/parity/testcases.md (include: initial state, steps, expected output, expected storage delta, allowed deltas)
 - [x] T003 [P] Create malicious input corpus doc in specs/001-add-wasm-hosting/security/malicious-input-cases.md (map each case to a UI surface)
-- [x] T004 [P] Create publish helper script skeleton in specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1
-- [x] T005 [P] Create static artifact scan script skeleton in specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1
+- [x] T004 [P] Create publish helper script skeleton in scripts/publish-browser-hosted.ps1
+- [x] T005 [P] Create static artifact scan script skeleton in scripts/scan-static-artifacts.ps1
 
 ---
 
@@ -129,9 +129,9 @@ description: "Task list for 001-add-wasm-hosting implementation (Option A: incre
 **Independent Test**: 以 publish script 產出兩種 deployment-ready outputs，並在兩平台完成 base-path + deep-link refresh 驗收。
 
 
-- [x] T048 [US2] Implement publish script (platform parameter) in specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 (must emit deterministic validation output)
+- [x] T048 [US2] Implement publish script (platform parameter) in scripts/publish-browser-hosted.ps1 (must emit deterministic validation output)
 - [x] T049 [US2] Add GitHub Pages artefacts to WASM project: CovenantPromptKeyWebAssembly/wwwroot/.nojekyll and CovenantPromptKeyWebAssembly/wwwroot/404.html
-- [x] T050 [US2] Ensure base href is rewritten for GitHub Pages subpath in specs/001-add-wasm-hosting/scripts/publish-browser-hosted.ps1 (no manual post-edit of publish output)
+- [x] T050 [US2] Ensure base href is rewritten for GitHub Pages subpath in scripts/publish-browser-hosted.ps1 (no manual post-edit of publish output)
 
 - [x] T051 [US2] Add Azure SWA config file at CovenantPromptKeyWebAssembly/staticwebapp.config.json (copied to publish root)
 - [x] T052 [US2] Configure SWA navigationFallback + exclude rules in CovenantPromptKeyWebAssembly/staticwebapp.config.json
@@ -157,7 +157,7 @@ description: "Task list for 001-add-wasm-hosting implementation (Option A: incre
 - [x] T060 [US3] Add CSP meta tag baseline (no inline scripts) to CovenantPromptKeyWebAssembly/wwwroot/index.html
 - [x] T061 [US3] Add CSP headers baseline to Azure SWA config in CovenantPromptKeyWebAssembly/staticwebapp.config.json
 
-- [x] T062 [US3] Implement static artifact scan (no secrets in client) in specs/001-add-wasm-hosting/scripts/scan-static-artifacts.ps1 (token patterns must be defined in the script)
+- [x] T062 [US3] Implement static artifact scan (no secrets in client) in scripts/scan-static-artifacts.ps1 (token patterns must be defined in the script)
 - [x] T063 [US3] Add security validation instructions in specs/001-add-wasm-hosting/quickstart.md (how to run malicious corpus and scan script)
 
 **Checkpoint**: CSP is applied (platform-appropriate), malicious inputs render as text only, and publish output passes secrets scan.
