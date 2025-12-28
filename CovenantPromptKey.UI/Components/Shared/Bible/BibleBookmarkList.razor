@@ -44,7 +44,7 @@
             @foreach (var bookmark in DisplayedBookmarks)
             {
                 <div class="bible-bookmark-item d-flex justify-content-between align-items-center">
-                    <a href="/bible/read/@bookmark.BookNumber/@bookmark.ChapterNumber" 
+                    <a href="bible/read/@bookmark.BookNumber/@bookmark.ChapterNumber" 
                        class="bible-bookmark-link flex-grow-1 text-decoration-none"
                        @onclick="() => OnBookmarkClicked(bookmark)"
                        @onclick:preventDefault="@PreventNavigation">

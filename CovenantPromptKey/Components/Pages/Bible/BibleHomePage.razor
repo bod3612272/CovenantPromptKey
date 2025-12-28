@@ -15,7 +15,7 @@
     <BibleSubNavigation />
 
     <div class="bible-home-cards">
-        <a href="/bible/search" class="bible-home-card">
+        <a href="bible/search" class="bible-home-card">
             <div class="bible-home-card-icon">
                 <i class="bi bi-search"></i>
             </div>
@@ -25,7 +25,7 @@
             </div>
         </a>
 
-        <a href="/bible/read" class="bible-home-card">
+        <a href="bible/read" class="bible-home-card">
             <div class="bible-home-card-icon">
                 <i class="bi bi-journal-text"></i>
             </div>
@@ -35,7 +35,7 @@
             </div>
         </a>
 
-        <a href="/bible/game" class="bible-home-card">
+        <a href="bible/game" class="bible-home-card">
             <div class="bible-home-card-icon">
                 <i class="bi bi-controller"></i>
             </div>
@@ -107,7 +107,7 @@
                                             <tr>
                                                 <td class="text-center fw-semibold">@book.BookNumber</td>
                                                 <td>
-                                                    <a class="bible-book-link" href="@($"/bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
+                                                    <a class="bible-book-link" href="@($"bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
                                                 </td>
                                                 <td class="text-end">@FormatNumber(book.ChapterCount)</td>
                                                 <td class="text-end">@FormatNumber(book.VerseCount)</td>
@@ -145,7 +145,7 @@
                                             <tr>
                                                 <td class="text-center fw-semibold">@book.BookNumber</td>
                                                 <td>
-                                                    <a class="bible-book-link" href="@($"/bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
+                                                    <a class="bible-book-link" href="@($"bible/read?book={Uri.EscapeDataString(book.BookName)}&chapter=1")">@book.BookName</a>
                                                 </td>
                                                 <td class="text-end">@FormatNumber(book.ChapterCount)</td>
                                                 <td class="text-end">@FormatNumber(book.VerseCount)</td>

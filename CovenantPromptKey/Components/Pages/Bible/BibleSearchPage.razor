@@ -219,7 +219,7 @@
         var bookNumber = ReadingService?.GetBookNumber(result.BookName) ?? 1;
         if (bookNumber < 1) bookNumber = 1;
         
-        NavigationManager?.NavigateTo($"/bible/read/{bookNumber}/{result.ChapterNumber}?verse={result.VerseNumber}");
+        NavigationManager?.NavigateTo($"bible/read/{bookNumber}/{result.ChapterNumber}?verse={result.VerseNumber}");
     }
 
     private async Task ClearSearch()
