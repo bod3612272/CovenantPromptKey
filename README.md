@@ -5,6 +5,11 @@
   <img src="CovenantPromptKey/wwwroot/favicon.png" alt="CovenantPromptKey Logo" width="128" height="128">
   
   **互動式關鍵字替換介面 | 聖經查詢系統**
+
+  <p>
+    <strong>GitHub Pages (Live Site)</strong><br/>
+    <a href="https://bod3612272.github.io/CovenantPromptKey/">https://bod3612272.github.io/CovenantPromptKey/</a>
+  </p>
   
   [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
   [![Blazor](https://img.shields.io/badge/Blazor-Dual--hosting%20(WASM%20%2B%20Server)-512BD4?logo=blazor)](https://blazor.net/)
@@ -25,6 +30,13 @@
 
  - **Primary（browser-hosted / Blazor WebAssembly）**：可部署為純靜態資產（GitHub Pages / Azure Static Web Apps），並支援 **offline-first**（成功載入一次後可離線啟動）。
  - **Legacy fallback（Blazor Server）**：保留既有 Server host 以利相容/回退；現階段兩個版本維持 **feature parity**，但未來主要發展方向以 Web（WASM）版本為主。
+
+ #### PWA / Service Worker Notes（Update behaviour）
+
+ 本專案的 browser-hosted（GitHub Pages / Azure SWA）採用 **Service Worker** 提供 offline-first；因此在部署環境更新時，瀏覽器可能會短暫沿用快取資產。
+
+ - **開發環境（localhost）**：預設不註冊 Service Worker，並會嘗試清除既有註冊/快取，避免「看起來沒更新」的 false positive。
+ - **部署環境（例如 GitHub Pages）**：若遇到版本未即時更新，請先 **關閉所有分頁後重新開啟**；仍不行再做 **Hard Refresh（Ctrl+F5）** 或清除該站台的 Site Data。
 
 ---
 
