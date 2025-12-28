@@ -9,7 +9,7 @@
         </div>
         <h1>CovenantPromptKey</h1>
         <p class="version">版本 1.0.0</p>
-        <p class="tagline">互動式關鍵字替換介面</p>
+        <p class="tagline">WebAssembly-first（browser-hosted）| 互動式關鍵字替換介面 | 聖經查詢系統</p>
     </div>
 
     <div class="about-sections">
@@ -23,6 +23,10 @@
                 <p>
                     透過直覺的關鍵字映射系統，您可以將公司名稱、產品代號、個人資訊等敏感內容替換為安全的替代詞，
                     待 AI 回覆後再將替代詞還原為原始內容。
+                </p>
+                <p class="mb-0">
+                    本專案採用 <strong>dual-hosting</strong>：目前以 <strong>browser-hosted（Blazor WebAssembly）</strong> 作為主要發展與上線版本（例如 GitHub Pages 的 static hosting），
+                    同時保留既有 <strong>Blazor Server</strong> 作為 legacy fallback。現階段兩者在使用者可見功能與行為上維持 <strong>feature parity</strong>。
                 </p>
             </div>
         </section>
@@ -56,6 +60,14 @@
                         <i class="bi bi-check-circle text-success"></i>
                         <span>完整的操作日誌追蹤</span>
                     </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>offline-first（WASM）：成功載入一次後可離線啟動（PWA/service worker）</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle text-success"></i>
+                        <span>Security baseline：CSP（禁止 inline script）+ code-as-text 安全呈現</span>
+                    </li>
                 </ul>
             </div>
         </section>
@@ -70,8 +82,12 @@
                         <span class="tech-desc">應用程式框架</span>
                     </div>
                     <div class="tech-item">
+                        <span class="tech-name">Blazor WebAssembly</span>
+                        <span class="tech-desc">Primary（browser-hosted）</span>
+                    </div>
+                    <div class="tech-item">
                         <span class="tech-name">Blazor Server</span>
-                        <span class="tech-desc">互動式 UI 框架</span>
+                        <span class="tech-desc">Legacy fallback</span>
                     </div>
                     <div class="tech-item">
                         <span class="tech-name">Bootstrap 5</span>
@@ -80,6 +96,10 @@
                     <div class="tech-item">
                         <span class="tech-name">CsvHelper</span>
                         <span class="tech-desc">CSV 處理</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-name">PWA</span>
+                        <span class="tech-desc">offline-first 快取機制</span>
                     </div>
                 </div>
             </div>
@@ -96,7 +116,35 @@
                         <p class="mb-0 mt-1">
                             所有關鍵字字典資料僅儲存在您的瀏覽器本機（localStorage），
                             工作階段資料儲存在 sessionStorage。
-                            沒有任何資料會被傳送至外部伺服器。
+                            沒有任何資料會被傳送至外部伺服器，且 browser-hosted 版本遵循 <strong>no secrets in client</strong> 原則（靜態輸出不包含任何金鑰或憑證）。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Baseline -->
+        <section class="about-section">
+            <h2><i class="bi bi-shield-lock me-2"></i>資安措施（Security Baseline）</h2>
+            <div class="section-content">
+                <p>
+                    CovenantPromptKey 的設計目標是把使用者輸入視為 <strong>untrusted input</strong>，並以最低可行的安全基線降低 XSS / HTML injection 風險。
+                    您可以貼上任何程式碼或包含特殊字元的內容（例如 <code>&lt;script&gt;</code>、<code>&lt;img onerror=...&gt;</code>），系統必須只把它當成文字顯示，不會執行。
+                </p>
+
+                <ul class="mb-3">
+                    <li><strong>CSP</strong>：設定 Content Security Policy，<strong>禁止 inline script</strong>，並限制腳本來源為同源（必要時允許 WASM runtime 所需的 <code>'wasm-unsafe-eval'</code>）。</li>
+                    <li><strong>Code-as-text</strong>：所有由使用者輸入/匯入/儲存資料衍生的內容，預設以純文字方式渲染（escaping/encoding），避免 DOM 注入。</li>
+                    <li><strong>No secrets in client</strong>：browser-hosted 靜態輸出不應包含任何敏感憑證/金鑰；部署前可進行 artefact scan（secrets pattern scan）。</li>
+                </ul>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <div>
+                        <strong>重要提醒（Residual Risk）</strong>
+                        <p class="mb-0 mt-1">
+                            由於字典資料會保存在瀏覽器端儲存（localStorage/sessionStorage），若您的瀏覽器環境已被惡意擴充套件、惡意腳本或系統惡意程式控制，仍可能導致資料外洩。
+                            建議在可信任的裝置與瀏覽器環境使用，並避免在共享電腦上保存敏感字典。
                         </p>
                     </div>
                 </div>
@@ -131,6 +179,10 @@
                         </p>
                     </div>
                 </div>
+
+                <p class="text-muted small mb-0">
+                    Tip: 若您希望 offline-first 在離線時仍可啟動，請先完成一次成功的線上載入，讓瀏覽器建立必要的快取（PWA/service worker 的 app shell）。
+                </p>
 
                 <div class="alert alert-warning mt-3">
                     <i class="bi bi-exclamation-triangle me-2"></i>
