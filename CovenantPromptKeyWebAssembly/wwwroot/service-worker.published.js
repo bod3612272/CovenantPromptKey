@@ -21,6 +21,12 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+self.addEventListener('message', (event) => {
+    if (event?.data?.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>
@@ -58,6 +64,29 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 } catch {
                     const cached = await caches.match(indexUrl, { ignoreSearch: true });
+                    if (cached) {
+                        return cached;
+                    }
+
+                    return fetch(event.request);
+                }
+            })()
+        );
+        return;
+    }
+
+    // Blazor boot manifest is not fingerprinted; cache-first can pin clients to an
+    // old manifest that references removed hashed assets after a deployment.
+    if (requestUrl.pathname.endsWith('/_framework/blazor.boot.json')) {
+        event.respondWith(
+            (async () => {
+                try {
+                    const response = await fetch(event.request, { cache: 'no-store' });
+                    const cache = await caches.open(cacheName);
+                    await cache.put(event.request, response.clone());
+                    return response;
+                } catch {
+                    const cached = await caches.match(event.request, { ignoreSearch: true });
                     if (cached) {
                         return cached;
                     }
