@@ -26,7 +26,7 @@ public static class VersionInfo
     /// 
     /// ⚠️ 更新此版本號時，請同步更新 CovenantPromptKey.csproj 中的 &lt;Version&gt; 屬性。
     /// </summary>
-    public const string Version = "0.1.0";
+    public const string Version = "1.0.0";
     
     /// <summary>
     /// 應用程式完整名稱與版本。
