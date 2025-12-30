@@ -15,6 +15,10 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(cacheName).then((cache) => cache.addAll(precacheUrls))
     );
+
+    // Activate updated worker ASAP so new assets are picked up without requiring users
+    // to close all tabs.
+    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -39,11 +43,28 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // SPA navigation: serve cached index.html when available.
+    // SPA navigation: network-first for index.html to avoid serving stale app shells.
     if (event.request.mode === 'navigate') {
+        const indexUrl = new URL('index.html', self.location).toString();
         event.respondWith(
-            caches.match(new URL('index.html', self.location).toString(), { ignoreSearch: true })
-                .then((cached) => cached || fetch(event.request))
+            (async () => {
+                try {
+                    // Always attempt to revalidate index.html.
+                    const response = await fetch(indexUrl, { cache: 'no-store' });
+
+                    const cache = await caches.open(cacheName);
+                    await cache.put(indexUrl, response.clone());
+
+                    return response;
+                } catch {
+                    const cached = await caches.match(indexUrl, { ignoreSearch: true });
+                    if (cached) {
+                        return cached;
+                    }
+
+                    return fetch(event.request);
+                }
+            })()
         );
         return;
     }

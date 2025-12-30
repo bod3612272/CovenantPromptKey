@@ -29,6 +29,7 @@
     window.addEventListener('load', () => {
         navigator.serviceWorker
             .register('service-worker.js', { updateViaCache: 'none' })
+            .then((registration) => registration.update())
             .catch(() => {
                 // Intentionally no-op: offline capability is best-effort.
             });
