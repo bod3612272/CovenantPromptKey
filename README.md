@@ -13,7 +13,7 @@
   
   [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
   [![Blazor](https://img.shields.io/badge/Blazor-Dual--hosting%20(WASM%20%2B%20Server)-512BD4?logo=blazor)](https://blazor.net/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
+  [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
   [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://www.microsoft.com/windows)
 
 </div>
@@ -256,7 +256,9 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## 📄 License
 
-本專案採用 MIT 授權條款。詳見 [LICENSE.md](LICENSE.md)。
+本專案採用 Apache License 2.0 授權條款。詳見 [LICENSE](LICENSE)。
+
+Third-party notices（第三方授權/聲明）請參考 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
 ---
 

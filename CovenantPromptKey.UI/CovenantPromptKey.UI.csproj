@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,12 @@
     <Reference Include="BibleData">
       <HintPath>..\Dll\BibleData.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\LICENSE" LogicalName="CovenantPromptKey.EmbeddedDocs.LICENSE" />
+    <EmbeddedResource Include="..\LICENSE.zh-TW.md" LogicalName="CovenantPromptKey.EmbeddedDocs.LICENSE_ZH_TW" WithCulture="false" />
+    <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.md" LogicalName="CovenantPromptKey.EmbeddedDocs.THIRD_PARTY_NOTICES" />
   </ItemGroup>
 
 </Project>

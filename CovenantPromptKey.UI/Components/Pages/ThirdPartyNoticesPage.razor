@@ -1,0 +1,61 @@
+@page "/third-party-notices"
+@using System.IO
+@using Markdig
+@using Microsoft.AspNetCore.Components
+
+<PageTitle>Third-Party Notices - CovenantPromptKey</PageTitle>
+
+<div class="container py-4">
+    <h1 class="h3 mb-3">Third-Party Notices / 第三方授權與聲明</h1>
+    <p class="text-muted">
+        本頁列出本專案使用的第三方軟體授權資訊與相關聲明。
+    </p>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger">
+            <strong>Unable to load notices.</strong>
+            <div class="small mt-1">@_error</div>
+        </div>
+    }
+    else if (_content is null)
+    {
+        <p class="text-muted">Loading…</p>
+    }
+    else
+    {
+        <div class="border rounded p-3 bg-body-tertiary">@_html</div>
+    }
+</div>
+
+@code {
+    private const string NoticesResourceName = "CovenantPromptKey.EmbeddedDocs.THIRD_PARTY_NOTICES";
+
+    private string? _content;
+    private MarkupString _html;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await using var stream = typeof(ThirdPartyNoticesPage).Assembly.GetManifestResourceStream(NoticesResourceName);
+            if (stream is null)
+            {
+                _error = $"Embedded resource not found: {NoticesResourceName}";
+                return;
+            }
+
+            using var reader = new StreamReader(stream);
+            _content = await reader.ReadToEndAsync();
+            _html = new MarkupString(Markdown.ToHtml(_content, CreatePipeline()));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private static MarkdownPipeline CreatePipeline()
+        => new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+}

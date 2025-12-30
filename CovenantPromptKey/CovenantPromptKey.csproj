@@ -54,4 +54,10 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\LICENSE" LogicalName="CovenantPromptKey.EmbeddedDocs.LICENSE" />
+    <EmbeddedResource Include="..\LICENSE.zh-TW.md" LogicalName="CovenantPromptKey.EmbeddedDocs.LICENSE_ZH_TW" WithCulture="false" />
+    <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.md" LogicalName="CovenantPromptKey.EmbeddedDocs.THIRD_PARTY_NOTICES" />
+  </ItemGroup>
+
 </Project>

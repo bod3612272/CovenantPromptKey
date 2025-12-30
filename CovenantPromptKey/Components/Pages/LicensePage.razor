@@ -1,0 +1,82 @@
+@page "/license"
+@rendermode InteractiveServer
+@using System.IO
+
+<PageTitle>License - CovenantPromptKey</PageTitle>
+
+<div class="container py-4">
+    <h1 class="h3 mb-3">Licence / 授權條款</h1>
+    <p class="text-muted">
+        本頁顯示 Apache License 2.0 的完整條文（canonical text），並提供繁體中文非官方對照翻譯。
+    </p>
+
+    <div class="alert alert-warning" role="alert">
+        <strong>重要：</strong>繁體中文版本為非官方（non-authoritative）翻譯，僅供參考；具法律效力之內容以英文原文為準（the English version shall prevail）。
+    </div>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger">
+            <strong>Unable to load licence text.</strong>
+            <div class="small mt-1">@_error</div>
+        </div>
+    }
+    else if (_licenseEn is null || _licenseZhTw is null)
+    {
+        <p class="text-muted">Loading…</p>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <h2 class="h5">English (Authoritative)</h2>
+                <pre class="border rounded p-3 bg-body-tertiary" style="white-space: pre-wrap;">@_licenseEn</pre>
+            </div>
+            <div class="col-12 col-lg-6">
+                <h2 class="h5">繁體中文（非官方翻譯）</h2>
+                <pre class="border rounded p-3 bg-body-tertiary" style="white-space: pre-wrap;">@_licenseZhTw</pre>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private const string LicenseResourceName = "CovenantPromptKey.EmbeddedDocs.LICENSE";
+    private const string LicenseZhTwResourceName = "CovenantPromptKey.EmbeddedDocs.LICENSE_ZH_TW";
+
+    private string? _licenseEn;
+    private string? _licenseZhTw;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var assembly = typeof(LicensePage).Assembly;
+
+            await using var streamEn = assembly.GetManifestResourceStream(LicenseResourceName);
+            if (streamEn is null)
+            {
+                _error = $"Embedded resource not found: {LicenseResourceName}";
+                return;
+            }
+
+            await using var streamZhTw = assembly.GetManifestResourceStream(LicenseZhTwResourceName);
+            if (streamZhTw is null)
+            {
+                _error = $"Embedded resource not found: {LicenseZhTwResourceName}";
+                return;
+            }
+
+            using var readerEn = new StreamReader(streamEn);
+            using var readerZhTw = new StreamReader(streamZhTw);
+
+            _licenseEn = await readerEn.ReadToEndAsync();
+            _licenseZhTw = await readerZhTw.ReadToEndAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}
